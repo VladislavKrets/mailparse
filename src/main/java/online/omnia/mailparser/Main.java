@@ -14,10 +14,7 @@ import java.util.List;
 public class Main {
     public static void main(String[] args) throws IOException {
         ZohoMail zohoMail = new ZohoMail();
-       /* parser.connect("https://accounts.zoho.eu/login?servicename=VirtualOffice&hidesignup=true&serviceurl=http%3A%2F%2Fmail.zoho.eu&hide_secure=true&css=https://www.zoho.eu//css/prd-sign.css",
-               "v.krets@omni-a.com", "A0AzWhP9");
-        parser.getAdSets("https://mail.zoho.com/zm/popMail.do?accId=4078132000000008001&msgId=4078132000000013001&folId=4078132000000008013&att=0&entityId=4078132000000013001&entityType=1&feature=false");
-    */
+
        List<ZohoAccount> zohoAccounts = zohoMail.getZohoAccount();
        List<ZohoMessage> messages = zohoMail.getMessages(zohoAccounts.get(0).getAccountId());
        ZohoMessageData zohoMessageData = zohoMail.getZohoMessageData(zohoAccounts.get(0).getAccountId(), messages.get(0).getFolderId(), messages.get(0).getMessageId());
