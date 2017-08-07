@@ -79,7 +79,6 @@ public class ZohoMail {
                 adEntity.setImpressions(trElements.get(headersList.indexOf("Impressions")).text());
             }
             if (headersList.contains("Spent")) {
-                System.out.println(trElements.get(headersList.indexOf("Spent")).text());
                 adEntity.setSpent(trElements.get(headersList.indexOf("Spent")).text());
             }
             adEntities.add(adEntity);
