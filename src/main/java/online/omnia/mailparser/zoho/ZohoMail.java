@@ -22,14 +22,11 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import javax.mail.*;
+import java.io.*;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayDeque;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 /**
  * Created by lollipop on 04.08.2017.
@@ -86,63 +83,21 @@ public class ZohoMail {
 
         return adEntities;
     }
-
-    public ZohoMessageData getZohoMessageData(String accountId, String folderId, String messageId) throws IOException {
-        String answer = getResponse(String.format("accounts/%s/folders/%s/messages/%s/content",
-                accountId, folderId, messageId));
-        GsonBuilder builder = new GsonBuilder();
-        builder.registerTypeAdapter(ZohoMessageData.class, new JsonZohoDataMessageDeserializer());
-        Gson gson = builder.create();
-        ZohoMessageData zohoMessageData = gson.fromJson(answer, ZohoMessageData.class);
-        return zohoMessageData;
+    //poppro.zoho.com
+    //995
+    //v.krets@omni-a.com
+    //A0AzWhP9
+    public static Properties getText(String serverAddress, String port,
+                                 String userName, String password, String senderAddress) throws MessagingException, IOException {
+        Properties props = new Properties();
+        props.put("mail.pop3.socketFactory.class", "javax.net.ssl.SSLSocketFactory");
+        props.put("mail.pop3.socketFactory.fallback", "false");
+        props.put("mail.pop3.socketFactory.port", port);
+        props.put("mail.pop3.port", port);
+        props.put("mail.pop3.host", serverAddress);
+        props.put("mail.pop3.user", userName);
+        props.put("mail.store.protocol", "pop3");
+        return props;
     }
 
-    public List<ZohoAccount> getZohoAccount() throws IOException {
-        String answer = getResponse("accounts");
-        GsonBuilder builder = new GsonBuilder();
-        builder.registerTypeAdapter(List.class, new JsonZohoAccountDeserializer());
-        Gson gson = builder.create();
-        List<ZohoAccount> accounts = gson.fromJson(answer, List.class);
-        return accounts;
-    }
-
-    public List<ZohoMessage> getMessages(String accountId) throws IOException {
-        String answer = getResponse(String.format("accounts/%s/messages/view", accountId));
-        GsonBuilder builder = new GsonBuilder();
-        builder.registerTypeAdapter(List.class, new JsonZohoMessagesDeserializer());
-        Gson gson = builder.create();
-        List<ZohoMessage> messages = gson.fromJson(answer, List.class);
-        return messages;
-    }
-    private String getResponse(String url) throws IOException {
-        CloseableHttpClient httpClient = HttpClients.createDefault();
-        HttpGet httpGet = new HttpGet("https://mail.zoho.com/api/" + url);
-        httpGet.addHeader("Authorization", "Zoho-authtoken 514d7668bae167c3eab9050e2fbd86e1");
-        CloseableHttpResponse response = httpClient.execute(httpGet);
-        StringBuilder builder = new StringBuilder();
-        BufferedReader reader = new BufferedReader(new InputStreamReader(response.getEntity().getContent()));
-        String line;
-        while ((line = reader.readLine()) != null) {
-            builder.append(line);
-        }
-        response.close();
-        httpClient.close();
-        return builder.toString();
-    }
-    public void getToken(String login, String password) throws IOException {
-        CloseableHttpClient httpClient = HttpClients.createDefault();
-        HttpPost httpPost = new HttpPost("https://accounts.zoho.eu/apiauthtoken/nb/create");
-        List<NameValuePair> nameValuePairs = new ArrayList<>();
-        nameValuePairs.add(new BasicNameValuePair("SCOPE", "ZohoMail/ZohoMailApi"));
-        nameValuePairs.add(new BasicNameValuePair("EMAIL_ID", login));
-        nameValuePairs.add(new BasicNameValuePair("PASSWORD", password));
-        httpPost.setEntity(new UrlEncodedFormEntity(nameValuePairs));
-        CloseableHttpResponse response = httpClient.execute(httpPost);
-        BufferedReader reader = new BufferedReader(new InputStreamReader(response.getEntity().getContent()));
-        String line;
-        while ((line = reader.readLine()) != null) {
-            System.out.println(line);
-        }
-        response.close();
-    }
 }

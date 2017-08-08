@@ -73,4 +73,16 @@ public class AdEntity {
     public void setSpent(String spent) {
         this.spent = spent;
     }
+
+    @Override
+    public String toString() {
+        return "AdEntity{" +
+                "number='" + number + '\'' +
+                ", date=" + date +
+                ", name='" + name + '\'' +
+                ", ctr='" + ctr + '\'' +
+                ", impressions='" + impressions + '\'' +
+                ", spent='" + spent + '\'' +
+                '}';
+    }
 }
