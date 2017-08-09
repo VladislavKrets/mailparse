@@ -1,0 +1,52 @@
+package online.omnia.mailparser;
+
+import java.io.*;
+import java.sql.Date;
+import java.sql.Time;
+import java.util.HashMap;
+import java.util.Map;
+
+/**
+ * Created by lollipop on 09.08.2017.
+ */
+public class Utils {
+    private static FileWriter logWriter;
+    private static String path;
+    public static synchronized Map<String, String> iniFileReader() {
+        Map<String, String> properties = new HashMap<>();
+        try(BufferedReader iniFileReader = new BufferedReader(new FileReader("email_cheetah.ini"))) {
+            String property;
+            String[] propertyArray;
+            while ((property = iniFileReader.readLine()) != null) {
+                propertyArray = property.split("=");
+                properties.put(propertyArray[0], propertyArray[1]);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return properties;
+    }
+    public static void setLogPath(String path) {
+        Utils.path = path;
+    }
+    public static synchronized void writeLog(String userName, String mailId, String result) throws IOException {
+        if (logWriter == null) {
+            if (path == null) {
+                File file = new File("email_cheetah.log");
+                if (!file.exists()) file.createNewFile();
+                logWriter = new FileWriter(file, true);
+            }
+            else {
+                File file = new File(path);
+                if (!file.exists()) file.createNewFile();
+                logWriter = new FileWriter(file, true);
+            }
+            Date date = new Date(System.currentTimeMillis());
+            Time time = new Time(System.currentTimeMillis());
+            logWriter.write(String.format("%s %s %s %s %s", date.toString(),
+                    time.toString(), userName, mailId, result));
+            logWriter.flush();
+        }
+
+    }
+}
