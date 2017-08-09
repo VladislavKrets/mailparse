@@ -72,7 +72,7 @@ public class ZohoMail {
         props.put("mail.pop3.port", port);
         props.put("mail.pop3.host", serverAddress);
         props.put("mail.pop3.user", userName);
-        props.put("mail.store.protocol", "pop3");
+        props.put("mail.store.protocol", "imap");
         return props;
     }
 

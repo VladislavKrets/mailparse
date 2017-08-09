@@ -1,10 +1,13 @@
 package online.omnia.mailparser;
 
+import online.omnia.mailparser.zoho.daoentities.EmailAccessEntity;
+
 import java.io.*;
 import java.sql.Date;
 import java.sql.Time;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Properties;
 
 /**
  * Created by lollipop on 09.08.2017.
@@ -26,6 +29,19 @@ public class Utils {
         }
         return properties;
     }
+
+    public static Properties createPropertiesFile(EmailAccessEntity emailAccessEntity) {
+        Properties props = new Properties();
+        props.put("mail.pop3.socketFactory.class", "javax.net.ssl.SSLSocketFactory");
+        props.put("mail.pop3.socketFactory.fallback", "false");
+        props.put("mail.pop3.socketFactory.port", emailAccessEntity.getServerPort());
+        props.put("mail.pop3.port", emailAccessEntity.getServerPort());
+        props.put("mail.pop3.host", emailAccessEntity.getServerName());
+        props.put("mail.pop3.user", emailAccessEntity.getUsername());
+        props.put("mail.store.protocol", emailAccessEntity.getServerProtocol());
+        return props;
+    }
+
     public static void setLogPath(String path) {
         Utils.path = path;
     }
