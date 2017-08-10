@@ -12,10 +12,10 @@ import java.util.Properties;
 public class Main {
     public static void main(String[] args) throws IOException, MessagingException {
         ZohoMail mail = new ZohoMail();
-        Properties properties = mail.getText("poppro.zoho.com", "995",
+        Properties properties = mail.getText("imappro.zoho.com", "993",
                 "v.krets@omni-a.com", "A0AzWhP9", "v.chugaev@omni-a.com");
         MailThread mailThread = new MailThread("v.chugaev@omni-a.com", properties,
-                "v.krets@omni-a.com", "A0AzWhP9", "poppro.zoho.com");
+                "v.krets@omni-a.com", "A0AzWhP9", "imappro.zoho.com");
         mailThread.run();
 
     }

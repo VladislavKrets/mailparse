@@ -1,11 +1,13 @@
 package online.omnia.mailparser;
 
 import online.omnia.mailparser.zoho.daoentities.AdsetEntity;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
 
 import javax.mail.*;
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -44,7 +46,7 @@ public class MailThread implements Runnable {
             };
             Session session = Session.getDefaultInstance(props, auth);
 
-            Store store = session.getStore("pop3s");
+            Store store = session.getStore("imap");
             store.connect(serverAddress, userName, password);
 
             getMessages(store.getFolder("INBOX"));
@@ -56,7 +58,7 @@ public class MailThread implements Runnable {
 
     private void getMessages(Folder folderInbox) {
         try {
-            folderInbox.open(Folder.READ_ONLY);
+            folderInbox.open(Folder.READ_WRITE);
             javax.mail.Message[] messages;
             List<String> list = new ArrayList<>();
             int messagesCount = folderInbox.getMessageCount();
@@ -70,7 +72,8 @@ public class MailThread implements Runnable {
                     checkMessage(list, currentDate, message);
                 }
             }
-
+            list = null;
+            messages = null;
             folderInbox.close(false);
         } catch (MessagingException | IOException e) {
             e.printStackTrace();
@@ -94,26 +97,128 @@ public class MailThread implements Runnable {
                 }
             }
             addresses = message.getFrom();
+
             splittedAddress = addresses[0].toString().split(" ");
             address = splittedAddress[splittedAddress.length - 1].replaceAll("[<>]", "");
-
+            System.out.println(address);
+            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+            String[] lines;
+            String line = null;
+            StringBuilder html = new StringBuilder();
+            boolean isHtml = false;
             if (address.equals(senderAddress)) {
-                reader = new BufferedReader(new InputStreamReader(message.getInputStream()));
-                String line;
-                while (reader.ready()) {
-                    line = reader.readLine();
-                    if (line.endsWith("=")) {
-                        line = line.substring(0, line.length() - 1) + reader.readLine();
-                        if (line.startsWith("Date") || line.matches("\\d{8}.+")) list.add(line);
+
+                message.writeTo(outputStream);
+                lines = outputStream.toString().replaceAll("\r", "").split("\n");
+
+                for (int i = 0; i < lines.length; i++) {
+                    if (lines[i] == null) break;
+                    if (lines[i].startsWith("Date")) {
+                        int length = lines[i].length();
+                        list.add(lines[i].substring(0, length - 1) + lines[i + 1]);
+                    }
+                    int length = lines[i].length();
+                    if (lines[i].contains("text/html")) isHtml = true;
+                    if (isHtml && lines[i].endsWith("=")) {
+
+                        html.append(lines[i].substring(0, length - 1));
+
                     }
                 }
-                adEntities = parseMessage(list);
+                adEntities = parseMessage(html.toString());
+
+                //ToDo
                 for (AdsetEntity adsetEntity : adEntities) {
                     System.out.println(adsetEntity);
                 }
-                //ToDo
+                reader = null;
+                addresses = null;
+                splittedAddress = null;
+                address = null;
+
             }
         }
+    }
+
+    public List<AdsetEntity> parseMessage(String html) {
+        Document doc = Jsoup.parse(html);
+        Element table = doc.body().select("table").last();
+
+        /*Element table = doc.body().select("div")
+                .first().select("div").first().select("blockquote")
+                .select("div").first().select("div").first().select("div")
+                .first().select("table").first();
+        */
+        Elements headers = table.select("thead").select("tr").last().select("th");
+        List<String> headersList = new ArrayList<>();
+        for (Element element : headers) {
+            headersList.add(element.text());
+        }
+        Elements body = table.select("tbody").select("tr");
+        Elements trElements;
+        List<AdsetEntity> adsetEntities = new ArrayList<>();
+        String[] splitName;
+        AdsetEntity adEntity;
+        for (Element trElement : body) {
+            trElements = trElement.select("td");
+            adEntity = new AdsetEntity();
+            if (headersList.contains("Ad Set")) {
+                adEntity.setAdsetName(trElements.get(headersList.indexOf("Ad Set")).text());
+                if (!adEntity.getAdsetName().isEmpty()) {
+                    splitName = adEntity.getAdsetName().split("\\(");
+                    if (splitName != null && splitName.length == 2)
+                        adEntity.setAdsetId(splitName[1].replaceAll("\\)", ""));
+                }
+            }
+            if (headersList.contains("Date")) {
+                try {
+                    adEntity.setDate(new SimpleDateFormat("yyyyMMdd").parse(trElements.get(headersList.indexOf("Date")).text()));
+                } catch (ParseException e) {
+                    e.printStackTrace();
+                }
+            }
+            if (headersList.contains("CTR")) {
+                adEntity.setCtr(Double.parseDouble(trElements.get(headersList.indexOf("CTR"))
+                        .text().replaceAll("%", "")));
+            }
+            if (headersList.contains("Impressions")) {
+                adEntity.setImpressions(Integer.parseInt(trElements.get(headersList.indexOf("Impressions"))
+                        .text().replaceAll(",", "")));
+            }
+            if (headersList.contains("Spent")) {
+                adEntity.setSpent(Double.parseDouble(trElements.get(headersList.indexOf("Spent"))
+                        .text().replaceAll("\\$", "")));
+            }
+            if (headersList.contains("Clicks")) {
+                adEntity.setClicks(Integer.parseInt(trElements.get(headersList.indexOf("Clicks")).text()
+                        .replaceAll(",", "")));
+            }
+            if (headersList.contains("Conversions")) {
+                adEntity.setConversions(Integer.parseInt(trElements.get(headersList.indexOf("Conversions")).text()));
+            }
+            if (headersList.contains("CVR")) {
+                adEntity.setCr(Double.parseDouble(trElements.get(headersList.indexOf("CVR")).text()
+                        .replaceAll("%", "")));
+            }
+            if (headersList.contains("CPM")) {
+                adEntity.setCpm(Double.parseDouble(trElements.get(headersList.indexOf("CPM")).text()
+                        .replaceAll("\\$", "")));
+            }
+            if (headersList.contains("CPC")) {
+                adEntity.setCpc(Double.parseDouble(trElements.get(headersList.indexOf("CPC")).text()
+                        .replaceAll("\\$", "")));
+            }
+            if (headersList.contains("CPI")) {
+                adEntity.setCpi(Double.parseDouble(trElements.get(headersList.indexOf("CPI")).text()
+                        .replaceAll("\\$", "")));
+            }
+            adsetEntities.add(adEntity);
+            doc = null;
+            table = null;
+            headers = null;
+            body = null;
+        }
+        return adsetEntities;
     }
 
     private List<AdsetEntity> parseMessage(List<String> parameters) throws IOException, MessagingException {
@@ -133,7 +238,10 @@ public class MailThread implements Runnable {
             buildAdset(headersLine, headersList, splitted, adsetEntity);
             adEntities.add(adsetEntity);
         }
-
+        headersLine = null;
+        headersList = null;
+        splitted = null;
+        splitName = null;
         return adEntities;
     }
 
@@ -190,5 +298,6 @@ public class MailThread implements Runnable {
             adsetEntity.setCpi(Double.parseDouble(splitted[headersList.indexOf("CPI")]
                     .replaceAll("\\$", "")));
         }
+        splitName = null;
     }
 }

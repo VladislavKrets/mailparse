@@ -66,13 +66,14 @@ public class ZohoMail {
     public static Properties getText(String serverAddress, String port,
                                  String userName, String password, String senderAddress) throws MessagingException, IOException {
         Properties props = new Properties();
-        props.put("mail.pop3.socketFactory.class", "javax.net.ssl.SSLSocketFactory");
-        props.put("mail.pop3.socketFactory.fallback", "false");
-        props.put("mail.pop3.socketFactory.port", port);
-        props.put("mail.pop3.port", port);
-        props.put("mail.pop3.host", serverAddress);
-        props.put("mail.pop3.user", userName);
+        props.put("mail.imap.socketFactory.class", "javax.net.ssl.SSLSocketFactory");
+        props.put("mail.imap.socketFactory.fallback", "false");
+        props.put("mail.imap.socketFactory.port", port);
+        props.put("mail.imap.port", port);
+        props.put("mail.imap.host", serverAddress);
+        props.put("mail.imap.user", userName);
         props.put("mail.store.protocol", "imap");
+        //props.put("mail.debug", "true");
         return props;
     }
 
