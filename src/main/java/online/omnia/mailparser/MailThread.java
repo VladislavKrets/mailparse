@@ -14,6 +14,7 @@ import java.io.*;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.concurrent.CountDownLatch;
 
 /**
  * Created by lollipop on 08.08.2017.
@@ -25,20 +26,23 @@ public class MailThread implements Runnable {
     private String password;
     private String serverAddress;
     private EmailAccessEntity accessEntity;
+    private CountDownLatch countDownLatch;
 
     public MailThread(String senderAddress, Properties props,
-                      EmailAccessEntity emailAccessEntity) {
+                      EmailAccessEntity emailAccessEntity, CountDownLatch countDownLatch) {
         this.senderAddress = senderAddress;
         this.props = props;
         this.accessEntity = emailAccessEntity;
         this.userName = emailAccessEntity.getUsername();
         this.password = emailAccessEntity.getPassword();
         this.serverAddress = emailAccessEntity.getServerProtocol();
+        this.countDownLatch = countDownLatch;
     }
 
     @Override
     public void run() {
         connect();
+        countDownLatch.countDown();
     }
 
     private void connect() {
