@@ -22,6 +22,12 @@ public class EmailSuccessEntity {
     public EmailSuccessEntity() {
     }
 
+    public EmailSuccessEntity(String messageId, int success, int emailAccessId) {
+        this.messageId = messageId;
+        this.success = success;
+        this.emailAccessId = emailAccessId;
+    }
+
     public void setId(int id) {
         this.id = id;
     }
