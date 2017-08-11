@@ -1,8 +1,8 @@
-package online.omnia.mailparser.zoho.dao;
+package online.omnia.mailparser.dao;
 
-import online.omnia.mailparser.zoho.daoentities.AdsetEntity;
-import online.omnia.mailparser.zoho.daoentities.EmailAccessEntity;
-import online.omnia.mailparser.zoho.daoentities.EmailSuccessEntity;
+import online.omnia.mailparser.daoentities.AdsetEntity;
+import online.omnia.mailparser.daoentities.EmailAccessEntity;
+import online.omnia.mailparser.daoentities.EmailSuccessEntity;
 
 import java.util.List;
 
@@ -16,4 +16,5 @@ public interface MySQLDao {
     List<EmailSuccessEntity> getEmailSuccess(int firstSuccessValue, int secondSuccessValue);
     void updateSuccessEntity(EmailSuccessEntity emailSuccessEntity);
     void addAdset(AdsetEntity adsetEntity);
+    EmailAccessEntity getAccessById(int id);
 }

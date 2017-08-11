@@ -1,9 +1,10 @@
-package online.omnia.mailparser;
+package online.omnia.mailparser.threads;
 
-import online.omnia.mailparser.zoho.dao.MySQLDaoImpl;
-import online.omnia.mailparser.zoho.daoentities.AdsetEntity;
-import online.omnia.mailparser.zoho.daoentities.EmailAccessEntity;
-import online.omnia.mailparser.zoho.daoentities.EmailSuccessEntity;
+import online.omnia.mailparser.Utils;
+import online.omnia.mailparser.dao.MySQLDaoImpl;
+import online.omnia.mailparser.daoentities.AdsetEntity;
+import online.omnia.mailparser.daoentities.EmailAccessEntity;
+import online.omnia.mailparser.daoentities.EmailSuccessEntity;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -19,17 +20,17 @@ import java.util.concurrent.CountDownLatch;
 /**
  * Created by lollipop on 08.08.2017.
  */
-public class MailThread implements Runnable {
-    private String senderAddress;
-    private Properties props;
-    private String userName;
-    private String password;
-    private String serverAddress;
-    private EmailAccessEntity accessEntity;
-    private CountDownLatch countDownLatch;
+public class MailNewThread implements Runnable {
+    protected String senderAddress;
+    protected Properties props;
+    protected String userName;
+    protected String password;
+    protected String serverAddress;
+    protected EmailAccessEntity accessEntity;
+    protected CountDownLatch countDownLatch;
 
-    public MailThread(String senderAddress, Properties props,
-                      EmailAccessEntity emailAccessEntity, CountDownLatch countDownLatch) {
+    public MailNewThread(String senderAddress, Properties props,
+                         EmailAccessEntity emailAccessEntity, CountDownLatch countDownLatch) {
         this.senderAddress = senderAddress;
         this.props = props;
         this.accessEntity = emailAccessEntity;
@@ -61,7 +62,16 @@ public class MailThread implements Runnable {
             getMessages(store.getFolder("INBOX"));
             store.close();
         } catch (MessagingException e) {
-            e.printStackTrace();
+            MySQLDaoImpl.getInstance().addNewEmailSuccess(new EmailSuccessEntity(
+                    null, 1, accessEntity.getId()
+            ));
+
+            try {
+                Utils.writeLog(accessEntity.getUsername(), "<No message_id>", "ERROR PARSING");
+            } catch (IOException e1) {
+                e1.printStackTrace();
+            }
+
         }
     }
 
@@ -85,16 +95,23 @@ public class MailThread implements Runnable {
             messages = null;
             folderInbox.close(false);
         } catch (MessagingException | IOException e) {
-            e.printStackTrace();
+            MySQLDaoImpl.getInstance().addNewEmailSuccess(new EmailSuccessEntity(
+                    null, 1, accessEntity.getId()
+            ));
+            try {
+                Utils.writeLog(accessEntity.getUsername(), "<No message_id>", "ERROR PARSING");
+            } catch (IOException e1) {
+                e1.printStackTrace();
+            }
         }
 
     }
 
-    private boolean isMessageHandled(String messageId) {
+    protected boolean isMessageHandled(String messageId) {
         return MySQLDaoImpl.getInstance().getEmailSuccessByMessageId(messageId) != null;
     }
 
-    private void checkMessage(List<String> list, Date currentDate, Message message) throws MessagingException, IOException {
+    protected void checkMessage(List<String> list, Date currentDate, Message message) throws MessagingException, IOException {
         String messageId = "<No message id>";
         Address[] addresses;
         String[] splittedAddress;

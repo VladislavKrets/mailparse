@@ -1,11 +1,15 @@
 package online.omnia.mailparser;
 
+import online.omnia.mailparser.daoentities.EmailSuccessEntity;
+import online.omnia.mailparser.threads.MailCheckThread;
+import online.omnia.mailparser.threads.MailNewThread;
 import online.omnia.mailparser.zoho.ZohoMail;
-import online.omnia.mailparser.zoho.daoentities.EmailAccessEntity;
+import online.omnia.mailparser.daoentities.EmailAccessEntity;
 
 import javax.mail.*;
 import java.io.*;
 import java.util.Properties;
+import java.util.concurrent.CountDownLatch;
 
 /**
  * Created by lollipop on 07.08.2017.
@@ -21,9 +25,12 @@ public class Main {
         emailAccessEntity.setUsername("v.krets@omni-a.com");
         emailAccessEntity.setServerPort("993");
         emailAccessEntity.setServerProtocol("imappro.zoho.com");
-        MailThread mailThread = new MailThread("v.chugaev@omni-a.com", properties,
-                emailAccessEntity);
+        /*MailNewThread mailThread = new MailNewThread("v.chugaev@omni-a.com", properties,
+                emailAccessEntity, new CountDownLatch(1));
         mailThread.run();
-
+*/
+        MailCheckThread mailCheckThread = new MailCheckThread("v.chugaev@omni-a.com", properties,
+                emailAccessEntity, new CountDownLatch(1), new EmailSuccessEntity("errr", 1, 2));
+        mailCheckThread.run();
     }
 }

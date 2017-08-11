@@ -1,9 +1,9 @@
-package online.omnia.mailparser.zoho.dao;
+package online.omnia.mailparser.dao;
 
 import online.omnia.mailparser.Utils;
-import online.omnia.mailparser.zoho.daoentities.AdsetEntity;
-import online.omnia.mailparser.zoho.daoentities.EmailAccessEntity;
-import online.omnia.mailparser.zoho.daoentities.EmailSuccessEntity;
+import online.omnia.mailparser.daoentities.AdsetEntity;
+import online.omnia.mailparser.daoentities.EmailAccessEntity;
+import online.omnia.mailparser.daoentities.EmailSuccessEntity;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
@@ -108,6 +108,15 @@ public class MySQLDaoImpl implements MySQLDao{
         session.save(adsetEntity);
         session.getTransaction().commit();
         session.close();
+    }
+
+    @Override
+    public EmailAccessEntity getAccessById(int id) {
+        Session session = sessionFactory.openSession();
+        EmailAccessEntity accessEntity = session.createQuery("from EmailAccessEntity where id=:id", EmailAccessEntity.class)
+                .setParameter("id", id).getSingleResult();
+        session.close();
+        return accessEntity;
     }
 
     public static SessionFactory getSessionFactory() {

@@ -1,6 +1,6 @@
 package online.omnia.mailparser;
 
-import online.omnia.mailparser.zoho.daoentities.EmailAccessEntity;
+import online.omnia.mailparser.daoentities.EmailAccessEntity;
 
 import java.io.*;
 import java.sql.Date;
@@ -32,13 +32,13 @@ public class Utils {
 
     public static Properties createPropertiesFile(EmailAccessEntity emailAccessEntity) {
         Properties props = new Properties();
-        props.put("mail.pop3.socketFactory.class", "javax.net.ssl.SSLSocketFactory");
-        props.put("mail.pop3.socketFactory.fallback", "false");
-        props.put("mail.pop3.socketFactory.port", emailAccessEntity.getServerPort());
-        props.put("mail.pop3.port", emailAccessEntity.getServerPort());
-        props.put("mail.pop3.host", emailAccessEntity.getServerName());
-        props.put("mail.pop3.user", emailAccessEntity.getUsername());
-        props.put("mail.store.protocol", emailAccessEntity.getServerProtocol());
+        props.put("mail.imap.socketFactory.class", "javax.net.ssl.SSLSocketFactory");
+        props.put("mail.imap.socketFactory.fallback", "false");
+        props.put("mail.imap.socketFactory.port", emailAccessEntity.getServerPort());
+        props.put("mail.imap.port", emailAccessEntity.getServerPort());
+        props.put("mail.imap.host", emailAccessEntity.getServerProtocol());
+        props.put("mail.imap.user", emailAccessEntity.getUsername());
+        props.put("mail.store.protocol", "imap");
         return props;
     }
 

@@ -1,4 +1,4 @@
-package online.omnia.mailparser.zoho.daoentities;
+package online.omnia.mailparser.daoentities;
 
 import javax.persistence.*;
 
