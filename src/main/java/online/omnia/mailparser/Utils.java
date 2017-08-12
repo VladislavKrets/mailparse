@@ -39,6 +39,7 @@ public class Utils {
         props.put("mail.imap.host", emailAccessEntity.getServerProtocol());
         props.put("mail.imap.user", emailAccessEntity.getUsername());
         props.put("mail.store.protocol", "imap");
+        //props.put("mail.debug", "true");
         return props;
     }
 
@@ -59,7 +60,7 @@ public class Utils {
             }
             Date date = new Date(System.currentTimeMillis());
             Time time = new Time(System.currentTimeMillis());
-            logWriter.write(String.format("%s %s %s %s %s", date.toString(),
+            logWriter.write(String.format("%s %s %s %s %s%n", date.toString(),
                     time.toString(), userName, mailId, result));
             logWriter.flush();
         }

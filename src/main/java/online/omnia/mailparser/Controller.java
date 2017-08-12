@@ -20,12 +20,13 @@ public class Controller {
         CountDownLatch countDownLatch = new CountDownLatch(accessEntities.size());
         ExecutorService service = Executors.newFixedThreadPool(10);
         for (EmailAccessEntity accessEntity : accessEntities) {
-            service.submit(new MailNewThread("orion_noreply@cmcm.com",
+            service.submit(new MailNewThread("v.chugaev@omni-a.com",
                     Utils.createPropertiesFile(accessEntity), accessEntity, countDownLatch));
         }
         try {
             countDownLatch.await();
             service.shutdown();
+            MySQLDaoImpl.getSessionFactory().close();
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
@@ -44,6 +45,7 @@ public class Controller {
         try {
             countDownLatch.await();
             service.shutdown();
+            MySQLDaoImpl.getSessionFactory().close();
         } catch (InterruptedException e) {
             e.printStackTrace();
         }

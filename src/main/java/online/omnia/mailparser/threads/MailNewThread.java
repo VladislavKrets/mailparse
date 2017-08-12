@@ -5,10 +5,12 @@ import online.omnia.mailparser.dao.MySQLDaoImpl;
 import online.omnia.mailparser.daoentities.AdsetEntity;
 import online.omnia.mailparser.daoentities.EmailAccessEntity;
 import online.omnia.mailparser.daoentities.EmailSuccessEntity;
+import org.apache.commons.codec.binary.*;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
+import sun.misc.BASE64Decoder;
 
 import javax.mail.*;
 import java.io.*;
@@ -57,11 +59,13 @@ public class MailNewThread implements Runnable {
             Session session = Session.getDefaultInstance(props, auth);
 
             Store store = session.getStore("imap");
-            store.connect(serverAddress, userName, password);
 
+            store.connect(serverAddress, userName, password);
+            System.out.println("getting messages");
             getMessages(store.getFolder("INBOX"));
             store.close();
         } catch (MessagingException e) {
+            e.printStackTrace();
             MySQLDaoImpl.getInstance().addNewEmailSuccess(new EmailSuccessEntity(
                     null, 1, accessEntity.getId()
             ));
@@ -77,24 +81,34 @@ public class MailNewThread implements Runnable {
 
     private void getMessages(Folder folderInbox) {
         try {
+
             folderInbox.open(Folder.READ_WRITE);
-            javax.mail.Message[] messages;
+            javax.mail.Message[] messages = null;
             List<String> list = new ArrayList<>();
             int messagesCount = folderInbox.getMessageCount();
             int ost = messagesCount % 30;
             Date currentDate = new Date();
             for (int i = 0; i < messagesCount; i += 30) {
-                if (messagesCount - 30 * (i + 1) <= ost)
+                if (messagesCount - 30 * (i + 1) <= ost) {
                     messages = folderInbox.getMessages(messagesCount - ost + 1, messagesCount);
-                else messages = folderInbox.getMessages(30 * i, 30 * (i + 1));
+                } else {
+                    messages = folderInbox.getMessages(30 * i + 1, 30 * (i + 1));
+                }
+
                 for (javax.mail.Message message : messages) {
-                    checkMessage(list, currentDate, message);
+                    if (message.getSubject().contains("Cheetah Ads Auto Report")) {
+
+                        checkMessage(list, currentDate, message);
+                    }
                 }
             }
             list = null;
             messages = null;
             folderInbox.close(false);
+
         } catch (MessagingException | IOException e) {
+
+            System.out.println("error");
             MySQLDaoImpl.getInstance().addNewEmailSuccess(new EmailSuccessEntity(
                     null, 1, accessEntity.getId()
             ));
@@ -116,48 +130,61 @@ public class MailNewThread implements Runnable {
         Address[] addresses;
         String[] splittedAddress;
         String address;
-        List<AdsetEntity> adsetEntities;
+        List<AdsetEntity> adsetEntities = null;
+
         if (currentDate.getTime() - message.getSentDate().getTime() <= 2592000000L) {
             Enumeration<Header> headerEnumeration = message.getAllHeaders();
             while (headerEnumeration.hasMoreElements()) {
                 Header header = headerEnumeration.nextElement();
-
                 if (header.getName().startsWith("Message-Id")) {
                     messageId = header.getValue();
-                    if (isMessageHandled(messageId)) return;
-                }
-                if (header.getName().equals("Subject")) {
-                    if (!header.getValue().contains("Cheetah Ads Auto Report")) return;
+
+                    try {
+                        if (isMessageHandled(messageId)) {
+                            System.out.println("message been handled");
+                            return;
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
                 }
             }
+            System.out.println("Checked");
             Utils.writeLog(userName, messageId, "");
 
             addresses = message.getFrom();
-
             splittedAddress = addresses[0].toString().split(" ");
             address = splittedAddress[splittedAddress.length - 1].replaceAll("[<>]", "");
-            System.out.println(address);
+
             ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+
             String[] lines;
             StringBuilder html = new StringBuilder();
             boolean isHtml = false;
+            String[] split;
             if (address.equals(senderAddress)) {
-
                 message.writeTo(outputStream);
-                lines = outputStream.toString().replaceAll("\r", "").split("\n");
+                BASE64Decoder base64Decoder = new BASE64Decoder();
 
+                lines = outputStream.toString().replaceAll("\r", "").split("\n");
+                String line;
                 for (int i = 0; i < lines.length; i++) {
                     if (lines[i] == null) break;
+                    line = org.apache.commons.codec.binary.Base64.isBase64(lines[i])
+                            ? new String(base64Decoder.decodeBuffer(lines[i])) : lines[i];
 
-                    int length = lines[i].length();
-                    if (lines[i].contains("text/html")) isHtml = true;
-                    if (isHtml && lines[i].endsWith("=")) {
-
-                        html.append(lines[i].substring(0, length - 1));
-
+                    int length = line.length();
+                    if (line.contains("text/html") || (line.contains("<") && line.contains(">"))) isHtml = true;
+                    if (isHtml && line.endsWith("=")) {
+                        html.append(line.substring(0, length - 1));
+                    }
+                    else if (isHtml) {
+                        html.append(line);
                     }
                 }
-                adsetEntities = parseMessage(html.toString());
+                    adsetEntities = parseMessage(html.toString());
+
+                System.out.println("Message parsed");
                 if (adsetEntities == null) {
                     MySQLDaoImpl.getInstance().addNewEmailSuccess(new EmailSuccessEntity(
                             messageId, 1, accessEntity.getId()
@@ -165,8 +192,6 @@ public class MailNewThread implements Runnable {
                     Utils.writeLog(accessEntity.getUsername(), messageId, "ERROR PARSING");
                     return;
                 }
-
-                //ToDo
 
                 for (AdsetEntity adsetEntity : adsetEntities) {
                     adsetEntity.setAccountId(accessEntity.getAccountId());
@@ -188,7 +213,7 @@ public class MailNewThread implements Runnable {
     }
 
     public List<AdsetEntity> parseMessage(String html) {
-        Document doc = Jsoup.parse(html);
+        Document doc = Jsoup.parse(html.replaceAll("&lt;", "<").replaceAll("&gt;", ">"));
         Element table = doc.body().select("table").last();
 
         Elements headers = table.select("thead").select("tr").last().select("th");
@@ -272,8 +297,7 @@ public class MailNewThread implements Runnable {
                 adEntity.setCpi(Double.parseDouble(trElements.get(headersList.indexOf("CPI")).text()
                         .replaceAll("\\$", "")));
             }
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             adEntity = null;
         }
     }

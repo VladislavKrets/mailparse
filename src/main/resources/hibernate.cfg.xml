@@ -1,8 +1,8 @@
 <hibernate-configuration>
 
     <session-factory>
-        <!--<property name="connection.url">jdbc:mysql://localhost/test?useSSL=true&amp;serverTimezone=UTC
-        </property>-->
+        <property name="connection.url">jdbc:mysql://localhost/mailparser_test?useSSL=true&amp;serverTimezone=UTC
+        </property>
         <property name="connection.driver_class">com.mysql.jdbc.Driver
         </property>
         <property name="connection.pool_size">10</property>

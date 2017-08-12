@@ -8,6 +8,7 @@ import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
 
+import javax.persistence.NoResultException;
 import javax.persistence.PersistenceException;
 import java.util.List;
 import java.util.Map;
@@ -29,10 +30,10 @@ public class MySQLDaoImpl implements MySQLDao{
         Map<String, String> properties = Utils.iniFileReader();
         configuration.setProperty("hibernate.connection.password", properties.get("password"));
         configuration.setProperty("hibernate.connection.username", properties.get("username"));
-        String url = (properties.get("url")
-                .startsWith("jdbc:mysql://") ? properties.get("url") : "jdbc:mysql://" + properties.get("url")) +
-                ":" + properties.get("port") + "/" + properties.get("dbname");
-        configuration.setProperty("hibernate.connection.url", url);
+        //String url = (properties.get("url")
+           //     .startsWith("jdbc:mysql://") ? properties.get("url") : "jdbc:mysql://" + properties.get("url")) +
+        //        ":" + properties.get("port") + "/" + properties.get("dbname");
+        //configuration.setProperty("hibernate.connection.url", url);
         Utils.setLogPath(properties.get("log"));
         while (true) {
             try {
@@ -63,8 +64,13 @@ public class MySQLDaoImpl implements MySQLDao{
     @Override
     public EmailSuccessEntity getEmailSuccessByMessageId(String messageId) {
         Session session = sessionFactory.openSession();
-        EmailSuccessEntity emailSuccessEntity = session.createQuery("from EmailSuccessEntity where message_id=:messageId", EmailSuccessEntity.class)
-                .setParameter("messageId", messageId).getSingleResult();
+        EmailSuccessEntity emailSuccessEntity = null;
+        try {
+            emailSuccessEntity = session.createQuery("from EmailSuccessEntity where message_id=:messageId", EmailSuccessEntity.class)
+                    .setParameter("messageId", messageId).getSingleResult();
+        } catch (NoResultException e) {
+            emailSuccessEntity = null;
+        }
         session.close();
         return emailSuccessEntity;
     }
@@ -113,8 +119,13 @@ public class MySQLDaoImpl implements MySQLDao{
     @Override
     public EmailAccessEntity getAccessById(int id) {
         Session session = sessionFactory.openSession();
-        EmailAccessEntity accessEntity = session.createQuery("from EmailAccessEntity where id=:id", EmailAccessEntity.class)
-                .setParameter("id", id).getSingleResult();
+        EmailAccessEntity accessEntity = null;
+        try {
+            accessEntity = session.createQuery("from EmailAccessEntity where id=:id", EmailAccessEntity.class)
+                    .setParameter("id", id).getSingleResult();
+        } catch (NoResultException e) {
+            accessEntity = null;
+        }
         session.close();
         return accessEntity;
     }
