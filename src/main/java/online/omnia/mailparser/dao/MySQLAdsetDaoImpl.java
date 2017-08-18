@@ -1,39 +1,40 @@
 package online.omnia.mailparser.dao;
 
-import online.omnia.mailparser.Utils;
-import online.omnia.mailparser.daoentities.AdsetEntity;
-import online.omnia.mailparser.daoentities.EmailAccessEntity;
-import online.omnia.mailparser.daoentities.EmailSuccessEntity;
+import online.omnia.mailparser.daoentities.*;
+import online.omnia.mailparser.utils.Utils;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
 
 import javax.persistence.NoResultException;
 import javax.persistence.PersistenceException;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
 /**
  * Created by lollipop on 09.08.2017.
  */
-public class MySQLDaoImpl implements MySQLDao{
+public class MySQLAdsetDaoImpl implements MySQLDao{
     private static Configuration configuration;
     private static SessionFactory sessionFactory;
-    private static MySQLDaoImpl instance;
+    private static MySQLAdsetDaoImpl instance;
 
     static {
         configuration = new Configuration()
                 .addAnnotatedClass(AdsetEntity.class)
                 .addAnnotatedClass(EmailAccessEntity.class)
                 .addAnnotatedClass(EmailSuccessEntity.class)
-                .configure("/hibernate.cfg.xml");
+                .addAnnotatedClass(CheetahTokenEntity.class)
+                .addAnnotatedClass(AccountEntity.class)
+                .configure("/hibernate_adset.cfg.xml");
         Map<String, String> properties = Utils.iniFileReader();
         configuration.setProperty("hibernate.connection.password", properties.get("password"));
         configuration.setProperty("hibernate.connection.username", properties.get("username"));
-        //String url = (properties.get("url")
-           //     .startsWith("jdbc:mysql://") ? properties.get("url") : "jdbc:mysql://" + properties.get("url")) +
-        //        ":" + properties.get("port") + "/" + properties.get("dbname");
-        //configuration.setProperty("hibernate.connection.url", url);
+        String url = (properties.get("url")
+                .startsWith("jdbc:mysql://") ? properties.get("url") : "jdbc:mysql://" + properties.get("url")) +
+                ":" + properties.get("port") + "/" + properties.get("dbname");
+        configuration.setProperty("hibernate.connection.url", url);
         Utils.setLogPath(properties.get("log"));
         while (true) {
             try {
@@ -53,10 +54,12 @@ public class MySQLDaoImpl implements MySQLDao{
     }
 
     @Override
-    public List<EmailAccessEntity> getMailsByCheck(int check) {
+    public List<EmailAccessEntity> getMailsByCheck(int check, String statisticType) {
         Session session = sessionFactory.openSession();
-        List<EmailAccessEntity> emails = session.createQuery("from EmailAccessEntity where check_cheetah=:check", EmailAccessEntity.class)
-                .setParameter("check", check).getResultList();
+        List<EmailAccessEntity> emails = session.createQuery("from EmailAccessEntity where check_cheetah=:check and statistic_type=:statisticType", EmailAccessEntity.class)
+                .setParameter("check", check)
+                .setParameter("statisticType", statisticType)
+                .getResultList();
         session.close();
         return emails;
     }
@@ -130,12 +133,60 @@ public class MySQLDaoImpl implements MySQLDao{
         return accessEntity;
     }
 
+    public void updateAdset(AdsetEntity adsetEntity) {
+        Session session = sessionFactory.openSession();
+        session.beginTransaction();
+        session.createQuery("update AdsetEntity set CTR=:ctr, date=:date, impressions=:impressions, spent=:spent, clicks=:clicks, CR=:cr, CPC=:cpc, CPM=:cpm, conversions=:conversions, CPI=:cpi where adset_id=:adsetId and account_id=:accountId")
+                .setParameter("ctr", adsetEntity.getCtr())
+                .setParameter("date", adsetEntity.getDate())
+                .setParameter("impressions", adsetEntity.getImpressions())
+                .setParameter("spent", adsetEntity.getSpent())
+                .setParameter("clicks", adsetEntity.getClicks())
+                .setParameter("cr", adsetEntity.getCr())
+                .setParameter("cpc", adsetEntity.getCpc())
+                .setParameter("cpm", adsetEntity.getCpm())
+                .setParameter("conversions", adsetEntity.getConversions())
+                .setParameter("cpi", adsetEntity.getCpi())
+                .setParameter("adsetId", adsetEntity.getAdsetId())
+                .setParameter("accountId", adsetEntity.getAccountId())
+                .executeUpdate();
+        session.getTransaction().commit();
+        session.close();
+    }
+    public boolean isDateInAdsets(Date date, String adsetId) {
+        Session session = sessionFactory.openSession();
+        try {
+            session.createQuery("from AdsetEntity where adset_id=:adsetId and date=:date")
+            .setParameter("adsetId", adsetId)
+            .setParameter("date", date).getSingleResult();
+            session.close();
+            return true;
+        } catch (NoResultException e) {
+            session.close();
+            return false;
+        }
+    }
+    public CheetahTokenEntity getToken(int accountId) {
+        Session session = sessionFactory.openSession();
+        CheetahTokenEntity entity = session.createQuery("from CheetahTokenEntity where account_id=:accountId", CheetahTokenEntity.class)
+                .setParameter("accountId", accountId).getSingleResult();
+        session.close();
+        return entity;
+    }
+
+    public List<AccountEntity> getAccounts(String type) {
+        Session session = sessionFactory.openSession();
+        List<AccountEntity> accountEntities = session.createQuery("from AccountEntity where statistics_type=:statisticsType", AccountEntity.class)
+                .setParameter("statisticsType", type).getResultList();
+        session.close();
+        return accountEntities;
+    }
     public static SessionFactory getSessionFactory() {
         return sessionFactory;
     }
 
-    public static synchronized MySQLDaoImpl getInstance() {
-        if (instance == null) instance = new MySQLDaoImpl();
+    public static synchronized MySQLAdsetDaoImpl getInstance() {
+        if (instance == null) instance = new MySQLAdsetDaoImpl();
         return instance;
     }
 }

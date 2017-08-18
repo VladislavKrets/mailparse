@@ -1,4 +1,4 @@
-package online.omnia.mailparser;
+package online.omnia.mailparser.utils;
 
 import online.omnia.mailparser.daoentities.EmailAccessEntity;
 

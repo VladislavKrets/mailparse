@@ -41,7 +41,12 @@ public class AdsetEntity {
     private int conversions;
     @Column(name = "CPI")
     private double cpi;
-
+    @Column(name = "campaign_name")
+    private String campaignName;
+    @Column(name = "campaign_id")
+    private String campaignId;
+    @Column(name = "receiver")
+    private String receiver;
     public AdsetEntity() {
     }
 
@@ -181,5 +186,29 @@ public class AdsetEntity {
                 ", conversions=" + conversions +
                 ", cpi=" + cpi +
                 '}';
+    }
+
+    public String getCampaignName() {
+        return campaignName;
+    }
+
+    public void setCampaignName(String campaignName) {
+        this.campaignName = campaignName;
+    }
+
+    public String getCampaignId() {
+        return campaignId;
+    }
+
+    public void setCampaignId(String campaignId) {
+        this.campaignId = campaignId;
+    }
+
+    public String getReceiver() {
+        return receiver;
+    }
+
+    public void setReceiver(String receiver) {
+        this.receiver = receiver;
     }
 }

@@ -1,14 +1,17 @@
 package online.omnia.mailparser;
 
-import online.omnia.mailparser.daoentities.EmailSuccessEntity;
-import online.omnia.mailparser.threads.MailCheckThread;
-import online.omnia.mailparser.threads.MailNewThread;
-import online.omnia.mailparser.zoho.ZohoMail;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import online.omnia.mailparser.daoentities.EmailAccessEntity;
+import online.omnia.mailparser.deserializers.JsonTokenDeserializer;
+import online.omnia.mailparser.threads.ApiNewThread;
 
 import javax.mail.*;
 import java.io.*;
-import java.util.Properties;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.concurrent.CountDownLatch;
 
 /**
@@ -17,6 +20,7 @@ import java.util.concurrent.CountDownLatch;
 public class Main {
     public static void main(String[] args) throws IOException, MessagingException {
         Controller controller = new Controller();
-        controller.emailCheetahNew();
+        controller.emailCheetahCheck();
+
     }
 }

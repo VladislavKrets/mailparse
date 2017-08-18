@@ -10,7 +10,7 @@ import java.util.List;
  * Created by lollipop on 08.08.2017.
  */
 public interface MySQLDao {
-    List<EmailAccessEntity> getMailsByCheck(int check);
+    List<EmailAccessEntity> getMailsByCheck(int check, String statisticType);
     EmailSuccessEntity getEmailSuccessByMessageId(String messageId);
     void addNewEmailSuccess(EmailSuccessEntity emailSuccessEntity);
     List<EmailSuccessEntity> getEmailSuccess(int firstSuccessValue, int secondSuccessValue);

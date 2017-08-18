@@ -1,11 +1,10 @@
 package online.omnia.mailparser.threads;
 
-import online.omnia.mailparser.Utils;
-import online.omnia.mailparser.dao.MySQLDaoImpl;
+import online.omnia.mailparser.utils.Utils;
+import online.omnia.mailparser.dao.MySQLAdsetDaoImpl;
 import online.omnia.mailparser.daoentities.AdsetEntity;
 import online.omnia.mailparser.daoentities.EmailAccessEntity;
 import online.omnia.mailparser.daoentities.EmailSuccessEntity;
-import org.apache.commons.codec.binary.*;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -66,7 +65,7 @@ public class MailNewThread implements Runnable {
             store.close();
         } catch (MessagingException e) {
             e.printStackTrace();
-            MySQLDaoImpl.getInstance().addNewEmailSuccess(new EmailSuccessEntity(
+            MySQLAdsetDaoImpl.getInstance().addNewEmailSuccess(new EmailSuccessEntity(
                     null, 1, accessEntity.getId()
             ));
 
@@ -109,7 +108,7 @@ public class MailNewThread implements Runnable {
         } catch (MessagingException | IOException e) {
 
             System.out.println("error");
-            MySQLDaoImpl.getInstance().addNewEmailSuccess(new EmailSuccessEntity(
+            MySQLAdsetDaoImpl.getInstance().addNewEmailSuccess(new EmailSuccessEntity(
                     null, 1, accessEntity.getId()
             ));
             try {
@@ -122,7 +121,7 @@ public class MailNewThread implements Runnable {
     }
 
     protected boolean isMessageHandled(String messageId) {
-        return MySQLDaoImpl.getInstance().getEmailSuccessByMessageId(messageId) != null;
+        return MySQLAdsetDaoImpl.getInstance().getEmailSuccessByMessageId(messageId) != null;
     }
 
     protected void checkMessage(List<String> list, Date currentDate, Message message) throws MessagingException, IOException {
@@ -186,7 +185,7 @@ public class MailNewThread implements Runnable {
 
                 System.out.println("Message parsed");
                 if (adsetEntities == null) {
-                    MySQLDaoImpl.getInstance().addNewEmailSuccess(new EmailSuccessEntity(
+                    MySQLAdsetDaoImpl.getInstance().addNewEmailSuccess(new EmailSuccessEntity(
                             messageId, 1, accessEntity.getId()
                     ));
                     Utils.writeLog(accessEntity.getUsername(), messageId, "ERROR PARSING");
@@ -196,10 +195,10 @@ public class MailNewThread implements Runnable {
                 for (AdsetEntity adsetEntity : adsetEntities) {
                     adsetEntity.setAccountId(accessEntity.getAccountId());
                     adsetEntity.setAccountName(accessEntity.getUsername());
-                    MySQLDaoImpl.getInstance().addAdset(adsetEntity);
+                    MySQLAdsetDaoImpl.getInstance().addAdset(adsetEntity);
                 }
 
-                MySQLDaoImpl.getInstance().addNewEmailSuccess(new EmailSuccessEntity(
+                MySQLAdsetDaoImpl.getInstance().addNewEmailSuccess(new EmailSuccessEntity(
                         messageId, 0, accessEntity.getId()
                 ));
                 Utils.writeLog(accessEntity.getUsername(), messageId, "SUCCESS");
@@ -262,6 +261,14 @@ public class MailNewThread implements Runnable {
                     e.printStackTrace();
                 }
             }
+            if (headersList.contains("Campaign")) {
+                adEntity.setCampaignName(trElements.get(headersList.indexOf("Campaign")).text());
+                if (!adEntity.getCampaignName().isEmpty()) {
+                    splitName = adEntity.getCampaignName().split("\\(");
+                    if (splitName != null && splitName.length == 2)
+                        adEntity.setCampaignId(splitName[1].replaceAll("\\)", ""));
+                }
+            }
             if (headersList.contains("CTR")) {
                 adEntity.setCtr(Double.parseDouble(trElements.get(headersList.indexOf("CTR"))
                         .text().replaceAll("%", "")));
@@ -271,6 +278,7 @@ public class MailNewThread implements Runnable {
                         .text().replaceAll(",", "")));
             }
             if (headersList.contains("Spent")) {
+
                 adEntity.setSpent(Double.parseDouble(trElements.get(headersList.indexOf("Spent"))
                         .text().replaceAll("\\$", "")));
             }
@@ -281,10 +289,10 @@ public class MailNewThread implements Runnable {
             if (headersList.contains("Conversions")) {
                 adEntity.setConversions(Integer.parseInt(trElements.get(headersList.indexOf("Conversions")).text()));
             }
-            if (headersList.contains("CVR")) {
+            /*if (headersList.contains("CVR")) {
                 adEntity.setCr(Double.parseDouble(trElements.get(headersList.indexOf("CVR")).text()
                         .replaceAll("%", "")));
-            }
+            }*/
             if (headersList.contains("CPM")) {
                 adEntity.setCpm(Double.parseDouble(trElements.get(headersList.indexOf("CPM")).text()
                         .replaceAll("\\$", "")));
@@ -292,11 +300,13 @@ public class MailNewThread implements Runnable {
             if (headersList.contains("CPC")) {
                 adEntity.setCpc(Double.parseDouble(trElements.get(headersList.indexOf("CPC")).text()
                         .replaceAll("\\$", "")));
+                if (adEntity.getCpc() != 0) adEntity.setCr((adEntity.getConversions() / adEntity.getCpc()) * 100);
             }
             if (headersList.contains("CPI")) {
                 adEntity.setCpi(Double.parseDouble(trElements.get(headersList.indexOf("CPI")).text()
                         .replaceAll("\\$", "")));
             }
+            adEntity.setReceiver("E-MAIL");
         } catch (Exception e) {
             adEntity = null;
         }

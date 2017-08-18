@@ -1,7 +1,7 @@
 package online.omnia.mailparser.threads;
 
-import online.omnia.mailparser.Utils;
-import online.omnia.mailparser.dao.MySQLDaoImpl;
+import online.omnia.mailparser.utils.Utils;
+import online.omnia.mailparser.dao.MySQLAdsetDaoImpl;
 import online.omnia.mailparser.daoentities.AdsetEntity;
 import online.omnia.mailparser.daoentities.EmailAccessEntity;
 import online.omnia.mailparser.daoentities.EmailSuccessEntity;
@@ -79,7 +79,7 @@ public class MailCheckThread extends MailNewThread{
                 adsetEntities = parseMessage(html.toString());
                 if (adsetEntities == null) {
                     emailSuccessEntity.setSuccess(emailSuccessEntity.getSuccess() + 1);
-                    MySQLDaoImpl.getInstance().updateSuccessEntity(emailSuccessEntity);
+                    MySQLAdsetDaoImpl.getInstance().updateSuccessEntity(emailSuccessEntity);
                     Utils.writeLog(accessEntity.getUsername(), messageId, "REPEATED ERROR PARSING");
                     return;
                 }
@@ -89,10 +89,10 @@ public class MailCheckThread extends MailNewThread{
                 for (AdsetEntity adsetEntity : adsetEntities) {
                     adsetEntity.setAccountId(accessEntity.getAccountId());
                     adsetEntity.setAccountName(accessEntity.getUsername());
-                    MySQLDaoImpl.getInstance().addAdset(adsetEntity);
+                    MySQLAdsetDaoImpl.getInstance().addAdset(adsetEntity);
                 }
                 emailSuccessEntity.setSuccess(0);
-                MySQLDaoImpl.getInstance().updateSuccessEntity(emailSuccessEntity);
+                MySQLAdsetDaoImpl.getInstance().updateSuccessEntity(emailSuccessEntity);
 
                 Utils.writeLog(accessEntity.getUsername(), messageId, "SUCCESS");
 

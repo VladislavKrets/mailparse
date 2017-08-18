@@ -112,4 +112,5 @@ public class EmailAccessEntity {
     public void setCheckCheetah(int checkCheetah) {
         this.checkCheetah = checkCheetah;
     }
+
 }
