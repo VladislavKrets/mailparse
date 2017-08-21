@@ -2,12 +2,10 @@ package online.omnia.mailparser.threads;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import online.omnia.mailparser.daoentities.AccountEntity;
-import online.omnia.mailparser.daoentities.CheetahTokenEntity;
+import com.google.gson.JsonSyntaxException;
+import online.omnia.mailparser.daoentities.*;
 import online.omnia.mailparser.utils.HttpMethodUtils;
 import online.omnia.mailparser.dao.MySQLAdsetDaoImpl;
-import online.omnia.mailparser.daoentities.AdsetEntity;
-import online.omnia.mailparser.daoentities.EmailAccessEntity;
 import online.omnia.mailparser.deserializers.JsonAdsetListDeserializer;
 import online.omnia.mailparser.deserializers.JsonTokenDeserializer;
 
@@ -18,6 +16,7 @@ import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.channels.AcceptPendingException;
+import java.sql.Time;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
@@ -37,52 +36,68 @@ public class ApiNewThread implements Runnable{
 
     @Override
     public void run() {
-        CheetahTokenEntity tokenEntity = MySQLAdsetDaoImpl.getInstance().getToken(accountEntity.getAccountId());
-        String accessToken = tokenEntity.getAccessToken();
-        try {
-            HttpURLConnection httpcon = (HttpURLConnection) ((new URL("https://api.ori.cmcm.com/report/advertiser").openConnection()));
-            httpcon.setDoOutput(true);
-            httpcon.setRequestProperty("Content-Type", "application/json");
-            httpcon.setRequestProperty("Accept", "application/json,application/x.orion.v1+json");
-            httpcon.setRequestProperty("Authorization", "Bearer " + accessToken);
-            httpcon.setRequestMethod("POST");
-            httpcon.connect();
-            SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
-            Date currentDate = new Date();
-            String str = "{\"column\":[\"impression\",\"click\",\"conversion\",\"revenue\",\"cpc\",\"cpi\",\"cpm\",\"ctr\",\"cvr\",\"cpv\"],"
-                    + "\"groupby\":[\"datetime\",\"adset\"],"
-                    + "\"filter\":{},"
-                    + "\"start\":\"" + dateFormat.format(new Date(currentDate.getTime() - 86400000L)) + "\","
-                    + "\"end\":\"" + dateFormat.format(currentDate) + "\"}";
+        System.out.println("Getting token");
+            CheetahTokenEntity tokenEntity = MySQLAdsetDaoImpl.getInstance().getToken(accountEntity.getAccountId());
+            String accessToken = tokenEntity.getAccessToken();
+            try {
+                System.out.println("Connecting to cheetah");
+                HttpURLConnection httpcon = (HttpURLConnection) ((new URL("https://api.ori.cmcm.com/report/advertiser").openConnection()));
+                httpcon.setDoOutput(true);
+                httpcon.setRequestProperty("Content-Type", "application/json");
+                httpcon.setRequestProperty("Accept", "application/json,application/x.orion.v1+json");
+                httpcon.setRequestProperty("Authorization", "Bearer " + accessToken);
+                httpcon.setRequestMethod("POST");
+                httpcon.connect();
+                SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+                Date currentDate = new Date();
+                System.out.println("Creating json request");
+                String str = "{\"column\":[\"impression\",\"click\",\"conversion\",\"revenue\",\"cpc\",\"cpi\",\"cpm\",\"ctr\",\"cvr\",\"cpv\"],"
+                        + "\"groupby\":[\"datetime\",\"adset\"],"
+                        + "\"filter\":{},"
+                        + "\"start\":\"" + dateFormat.format(new Date(currentDate.getTime() - 86400000L)) + "\","
+                        + "\"end\":\"" + dateFormat.format(currentDate) + "\"}";
 
-            byte[] outputBytes = str.getBytes("UTF-8");
-            OutputStream os = httpcon.getOutputStream();
-            os.write(outputBytes);
-            os.close();
-            BufferedReader reader = new BufferedReader(new InputStreamReader(httpcon.getInputStream()));
-            String line;
-            StringBuilder lineBuilder = new StringBuilder();
-            while ((line = reader.readLine()) != null) {
-                lineBuilder.append(line);
-            }
-            GsonBuilder gsonBuilder = new GsonBuilder();
-            gsonBuilder.registerTypeAdapter(List.class, new JsonAdsetListDeserializer(accessToken));
-            Gson listGson = gsonBuilder.create();
-            List<AdsetEntity> entityList = listGson.fromJson(lineBuilder.toString(), List.class);
-            for (AdsetEntity adsetEntity : entityList) {
-                adsetEntity.setAccountId(accountEntity.getAccountId());
-                adsetEntity.setAccountName(accountEntity.getUsername());
-                adsetEntity.setReceiver("API");
-                System.out.println(adsetEntity);
-                if (MySQLAdsetDaoImpl.getInstance().isDateInAdsets(adsetEntity.getDate(), adsetEntity.getAdsetId())) {
-                    MySQLAdsetDaoImpl.getInstance().updateAdset(adsetEntity);
+                byte[] outputBytes = str.getBytes("UTF-8");
+                OutputStream os = httpcon.getOutputStream();
+                os.write(outputBytes);
+                os.close();
+                BufferedReader reader = new BufferedReader(new InputStreamReader(httpcon.getInputStream()));
+                String line;
+                StringBuilder lineBuilder = new StringBuilder();
+                System.out.println("Getting answer");
+                while ((line = reader.readLine()) != null) {
+                    lineBuilder.append(line);
                 }
-                else MySQLAdsetDaoImpl.getInstance().addAdset(adsetEntity);
-                countDownLatch.countDown();
+                GsonBuilder gsonBuilder = new GsonBuilder();
+                gsonBuilder.registerTypeAdapter(List.class, new JsonAdsetListDeserializer(accessToken));
+                Gson listGson = gsonBuilder.create();
+                System.out.println("Parsing answer");
+                List<AdsetEntity> entityList = listGson.fromJson(lineBuilder.toString(), List.class);
+                if (entityList == null){
+                    countDownLatch.countDown();
+                    return;
+                }
+                for (AdsetEntity adsetEntity : entityList) {
+                    adsetEntity.setAccountId(accountEntity.getAccountId());
+                    adsetEntity.setReceiver("API");
+                    adsetEntity.setTime(new Time(currentDate.getTime()));
+
+                    if (MySQLAdsetDaoImpl.getInstance().isDateInAdsets(adsetEntity.getDate(), adsetEntity.getAdsetId())) {
+                        System.out.println("Updating adset");
+                        MySQLAdsetDaoImpl.getInstance().updateAdset(adsetEntity);
+                    }
+                    else{
+                        System.out.println("Adding adset");
+                        MySQLAdsetDaoImpl.getInstance().addAdset(adsetEntity);
+                    }
+                    System.out.println("CR: " + adsetEntity.getCr());
+
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
             }
-        } catch (IOException e) {
-            countDownLatch.countDown();
-            e.printStackTrace();
-        }
+
+        countDownLatch.countDown();
+        System.out.println(countDownLatch.getCount());
     }
 }

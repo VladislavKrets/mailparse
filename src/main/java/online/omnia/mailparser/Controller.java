@@ -19,9 +19,16 @@ import java.util.concurrent.Executors;
  */
 public class Controller {
 
+    public void cheetahNew() {
+        System.out.println("Getting accounts for working with api");
+        apiCheetahNew();
+        System.out.println("Getting accounts for working with e-mail");
+        emailCheetahNew();
+    }
     public void apiCheetahNew() {
         List<AccountEntity> accountEntities = MySQLAdsetDaoImpl.getInstance().getAccounts("API");
         CountDownLatch countDownLatch = new CountDownLatch(accountEntities.size());
+
         ExecutorService service = Executors.newFixedThreadPool(10);
         for (AccountEntity accountEntity : accountEntities) {
             service.submit(new ApiNewThread(accountEntity, countDownLatch));
@@ -29,7 +36,6 @@ public class Controller {
         try {
             countDownLatch.await();
             service.shutdown();
-            MySQLAdsetDaoImpl.getSessionFactory().close();
         } catch (InterruptedException e) {
             e.printStackTrace();
         }

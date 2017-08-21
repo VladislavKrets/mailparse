@@ -1,15 +1,16 @@
 package online.omnia.mailparser.deserializers;
 
 import com.google.gson.*;
+import online.omnia.mailparser.daoentities.Adset;
 
 import java.lang.reflect.Type;
 
 /**
  * Created by lollipop on 17.08.2017.
  */
-public class JsonAdsetDeserializer implements JsonDeserializer<String>{
+public class JsonAdsetDeserializer implements JsonDeserializer<Adset>{
     @Override
-    public String deserialize(JsonElement jsonElement, Type type,
+    public Adset deserialize(JsonElement jsonElement, Type type,
                               JsonDeserializationContext jsonDeserializationContext) throws JsonParseException {
         JsonObject object = jsonElement.getAsJsonObject();
         String status = object.get("status").getAsString();
@@ -17,8 +18,11 @@ public class JsonAdsetDeserializer implements JsonDeserializer<String>{
         System.out.println(status + " " + message);
         JsonElement dataElement = object.get("data");
         if (dataElement != null) {
-            String name = dataElement.getAsJsonObject().get("name").getAsString();
-            return name;
+            return new Adset(
+                    dataElement.getAsJsonObject().get("name").getAsString(),
+                    dataElement.getAsJsonObject().get("campaign_id").getAsString()
+            );
+
         }
         return null;
     }

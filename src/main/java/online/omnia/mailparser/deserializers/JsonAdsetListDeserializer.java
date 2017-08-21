@@ -1,6 +1,7 @@
 package online.omnia.mailparser.deserializers;
 
 import com.google.gson.*;
+import online.omnia.mailparser.daoentities.Adset;
 import online.omnia.mailparser.utils.HttpMethodUtils;
 import online.omnia.mailparser.daoentities.AdsetEntity;
 
@@ -30,13 +31,20 @@ public class JsonAdsetListDeserializer implements JsonDeserializer<List<AdsetEnt
 
         System.out.println(status + " " + message);
         List<String> titles = new ArrayList<>();
-        JsonObject data = object.get("data").getAsJsonObject();
-        JsonArray titleArray = data.get("title").getAsJsonArray();
+
+        JsonElement data = object.get("data");
+        if (data.isJsonArray()) {
+            System.out.println("Empty array");
+            System.out.println("Returned: " + jsonElement);
+            return null;
+        }
+
+        JsonArray titleArray = data.getAsJsonObject().get("title").getAsJsonArray();
         for (JsonElement element : titleArray) {
             titles.add(element.getAsString());
         }
         List<AdsetEntity> entities = new ArrayList<>();
-        JsonArray array = data.get("data").getAsJsonArray();
+        JsonArray array = data.getAsJsonObject().get("data").getAsJsonArray();
         AdsetEntity adsetEntity;
         JsonArray arrayElement;
         for (JsonElement element : array) {
@@ -54,7 +62,7 @@ public class JsonAdsetListDeserializer implements JsonDeserializer<List<AdsetEnt
                 adsetEntity.setImpressions(arrayElement.get(titles.indexOf("impression")).getAsInt());
             }
             if (titles.contains("ctr")) {
-                adsetEntity.setCtr(arrayElement.get(titles.indexOf("ctr")).getAsDouble());
+                adsetEntity.setCtr(arrayElement.get(titles.indexOf("ctr")).getAsDouble() * 100);
             }
             if (titles.contains("cpm")) {
                 adsetEntity.setCpm(arrayElement.get(titles.indexOf("cpm")).getAsDouble());
@@ -67,11 +75,12 @@ public class JsonAdsetListDeserializer implements JsonDeserializer<List<AdsetEnt
             }
             if (titles.contains("cpc")) {
                 adsetEntity.setCpc(arrayElement.get(titles.indexOf("cpc")).getAsDouble());
-                if (adsetEntity.getCpc() != 0) adsetEntity.setCr((adsetEntity.getConversions() / adsetEntity.getCpc()) * 100);
 
             }
             if (titles.contains("click")) {
                 adsetEntity.setClicks(arrayElement.get(titles.indexOf("click")).getAsInt());
+                if (adsetEntity.getClicks() != 0) adsetEntity.setCr(adsetEntity.getConversions() * 1.0 / adsetEntity.getClicks() * 100);
+
             }
             if (titles.contains("revenue")) {
                 adsetEntity.setSpent(arrayElement.get(titles.indexOf("revenue")).getAsDouble());
@@ -80,9 +89,14 @@ public class JsonAdsetListDeserializer implements JsonDeserializer<List<AdsetEnt
                 adsetEntity.setAdsetId(arrayElement.get(titles.indexOf("adset")).getAsString());
                 String answer = HttpMethodUtils.getMethod("adset/" + adsetEntity.getAdsetId(), token);
                 GsonBuilder builder = new GsonBuilder();
-                builder.registerTypeAdapter(String.class, new JsonAdsetDeserializer());
+                builder.registerTypeAdapter(Adset.class, new JsonAdsetDeserializer());
+                builder.registerTypeAdapter(String.class, new JsonCampaignDeserializer());
                 Gson gson = builder.create();
-                adsetEntity.setAdsetName(gson.fromJson(answer, String.class));
+                Adset adset = gson.fromJson(answer, Adset.class);
+                adsetEntity.setAdsetName(adset.getAdsetName());
+                adsetEntity.setCampaignId(adset.getCampaignId());
+                answer = HttpMethodUtils.getMethod("campaign/" + adsetEntity.getCampaignId(), token);
+                adsetEntity.setCampaignName(gson.fromJson(answer, String.class));
                 gson = null;
                 builder = null;
             }

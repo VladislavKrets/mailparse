@@ -88,7 +88,6 @@ public class MailCheckThread extends MailNewThread{
 
                 for (AdsetEntity adsetEntity : adsetEntities) {
                     adsetEntity.setAccountId(accessEntity.getAccountId());
-                    adsetEntity.setAccountName(accessEntity.getUsername());
                     MySQLAdsetDaoImpl.getInstance().addAdset(adsetEntity);
                 }
                 emailSuccessEntity.setSuccess(0);

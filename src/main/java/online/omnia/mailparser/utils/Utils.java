@@ -22,7 +22,9 @@ public class Utils {
             String[] propertyArray;
             while ((property = iniFileReader.readLine()) != null) {
                 propertyArray = property.split("=");
-                properties.put(propertyArray[0], propertyArray[1]);
+                if (property.contains("=")) {
+                    properties.put(propertyArray[0], propertyArray[1]);
+                }
             }
         } catch (IOException e) {
             e.printStackTrace();

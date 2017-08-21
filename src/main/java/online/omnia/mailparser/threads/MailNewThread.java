@@ -13,6 +13,7 @@ import sun.misc.BASE64Decoder;
 
 import javax.mail.*;
 import java.io.*;
+import java.sql.Time;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -194,7 +195,6 @@ public class MailNewThread implements Runnable {
 
                 for (AdsetEntity adsetEntity : adsetEntities) {
                     adsetEntity.setAccountId(accessEntity.getAccountId());
-                    adsetEntity.setAccountName(accessEntity.getUsername());
                     MySQLAdsetDaoImpl.getInstance().addAdset(adsetEntity);
                 }
 
@@ -245,6 +245,7 @@ public class MailNewThread implements Runnable {
 
     private void buildAdset(List<String> headersList, Elements trElements, AdsetEntity adEntity) {
         String[] splitName;
+
         try {
             if (headersList.contains("Ad Set")) {
                 adEntity.setAdsetName(trElements.get(headersList.indexOf("Ad Set")).text());
@@ -307,6 +308,8 @@ public class MailNewThread implements Runnable {
                         .replaceAll("\\$", "")));
             }
             adEntity.setReceiver("E-MAIL");
+            adEntity.setTime(new Time(System.currentTimeMillis()));
+            adEntity.setDate(new Date());
         } catch (Exception e) {
             adEntity = null;
         }

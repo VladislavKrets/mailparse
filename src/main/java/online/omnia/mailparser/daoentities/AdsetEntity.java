@@ -1,13 +1,14 @@
 package online.omnia.mailparser.daoentities;
 
 import javax.persistence.*;
+import java.sql.Time;
 import java.util.Date;
 
 /**
  * Created by lollipop on 04.08.2017.
  */
 @Entity
-@Table(name = "stat_cheetah_email")
+@Table(name = "source_statistics")
 public class AdsetEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -15,12 +16,12 @@ public class AdsetEntity {
     private int id;
     @Column(name = "account_id")
     private int accountId;
-    @Column(name = "account_name")
-    private String accountName;
     @Column(name = "adset_id")
     private String adsetId;
     @Column(name = "date")
     private Date date;
+    @Column(name = "time")
+    private Time time;
     @Column(name = "adset_name")
     private String adsetName;
     @Column(name = "CTR")
@@ -55,9 +56,6 @@ public class AdsetEntity {
         this.accountId = accountId;
     }
 
-    public void setAccountName(String accountName) {
-        this.accountName = accountName;
-    }
 
     public void setClicks(int clicks) {
         this.clicks = clicks;
@@ -91,9 +89,6 @@ public class AdsetEntity {
         return accountId;
     }
 
-    public String getAccountName() {
-        return accountName;
-    }
 
     public int getClicks() {
         return clicks;
@@ -172,7 +167,6 @@ public class AdsetEntity {
         return "AdsetEntity{" +
                 "id=" + id +
                 ", accountId=" + accountId +
-                ", accountName='" + accountName + '\'' +
                 ", adsetId='" + adsetId + '\'' +
                 ", date=" + date +
                 ", adsetName='" + adsetName + '\'' +
@@ -210,5 +204,13 @@ public class AdsetEntity {
 
     public void setReceiver(String receiver) {
         this.receiver = receiver;
+    }
+
+    public Time getTime() {
+        return time;
+    }
+
+    public void setTime(Time time) {
+        this.time = time;
     }
 }

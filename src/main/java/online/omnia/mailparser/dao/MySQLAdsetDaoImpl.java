@@ -31,9 +31,9 @@ public class MySQLAdsetDaoImpl implements MySQLDao{
         Map<String, String> properties = Utils.iniFileReader();
         configuration.setProperty("hibernate.connection.password", properties.get("password"));
         configuration.setProperty("hibernate.connection.username", properties.get("username"));
-        String url = (properties.get("url")
-                .startsWith("jdbc:mysql://") ? properties.get("url") : "jdbc:mysql://" + properties.get("url")) +
-                ":" + properties.get("port") + "/" + properties.get("dbname");
+        String jdbcURL = (properties.get("url")
+                .startsWith("jdbc:mysql://") ? properties.get("url") : "jdbc:mysql://" + properties.get("url"));
+        String url = (!jdbcURL.endsWith("/") ? jdbcURL + "/" : jdbcURL) + properties.get("dbname");
         configuration.setProperty("hibernate.connection.url", url);
         Utils.setLogPath(properties.get("log"));
         while (true) {
@@ -41,6 +41,7 @@ public class MySQLAdsetDaoImpl implements MySQLDao{
                 sessionFactory = configuration.buildSessionFactory();
                 break;
             } catch (PersistenceException e) {
+
                 try {
                     System.out.println("Can't connect to db");
                     System.out.println("Waiting for 30 seconds");
@@ -56,9 +57,8 @@ public class MySQLAdsetDaoImpl implements MySQLDao{
     @Override
     public List<EmailAccessEntity> getMailsByCheck(int check, String statisticType) {
         Session session = sessionFactory.openSession();
-        List<EmailAccessEntity> emails = session.createQuery("from EmailAccessEntity where check_cheetah=:check and statistic_type=:statisticType", EmailAccessEntity.class)
+        List<EmailAccessEntity> emails = session.createQuery("from EmailAccessEntity where check_cheetah=:check", EmailAccessEntity.class)
                 .setParameter("check", check)
-                .setParameter("statisticType", statisticType)
                 .getResultList();
         session.close();
         return emails;
@@ -133,7 +133,7 @@ public class MySQLAdsetDaoImpl implements MySQLDao{
         return accessEntity;
     }
 
-    public void updateAdset(AdsetEntity adsetEntity) {
+    public synchronized void updateAdset(AdsetEntity adsetEntity) {
         Session session = sessionFactory.openSession();
         session.beginTransaction();
         session.createQuery("update AdsetEntity set CTR=:ctr, date=:date, impressions=:impressions, spent=:spent, clicks=:clicks, CR=:cr, CPC=:cpc, CPM=:cpm, conversions=:conversions, CPI=:cpi where adset_id=:adsetId and account_id=:accountId")

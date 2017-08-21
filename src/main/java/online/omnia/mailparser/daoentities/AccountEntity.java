@@ -2,6 +2,7 @@ package online.omnia.mailparser.daoentities;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.Id;
 import javax.persistence.Table;
 
 /**
@@ -10,6 +11,7 @@ import javax.persistence.Table;
 @Entity
 @Table(name = "accounts")
 public class AccountEntity {
+    @Id
     @Column(name = "account_id")
     private int accountId;
     @Column(name = "buyer_id")
