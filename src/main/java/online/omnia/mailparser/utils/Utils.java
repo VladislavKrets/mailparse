@@ -77,7 +77,8 @@ public class Utils {
                         file.createNewFile();
                     }
                 }
-                logWriter = new FileWriter(file, true);
+                System.out.println(file.getPath());
+                logWriter = new FileWriter(new File(path), true);
             }
             Date date = new Date(System.currentTimeMillis());
             Time time = new Time(System.currentTimeMillis());

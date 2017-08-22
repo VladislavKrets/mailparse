@@ -248,7 +248,9 @@ public class MailNewThread implements Runnable {
 
     private void buildAdset(List<String> headersList, Elements trElements, AdsetEntity adEntity) {
         String[] splitName;
-
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyyMMdd");
+        TimeZone.setDefault(TimeZone.getTimeZone("Etc/UTC"));
+        simpleDateFormat.setTimeZone(TimeZone.getTimeZone("Etc/UTF"));
         try {
             if (headersList.contains("Ad Set")) {
                 adEntity.setAdsetName(trElements.get(headersList.indexOf("Ad Set")).text());
@@ -260,8 +262,9 @@ public class MailNewThread implements Runnable {
             }
             if (headersList.contains("Date")) {
                 try {
-                    adEntity.setDate(new SimpleDateFormat("yyyyMMdd").parse(trElements.get(headersList.indexOf("Date")).text()));
+                    adEntity.setDate(simpleDateFormat.parse(trElements.get(headersList.indexOf("Date")).text()));
                     adEntity.setTime(new Time(adEntity.getDate().getTime()));
+
                 } catch (ParseException e) {
                     e.printStackTrace();
                 }

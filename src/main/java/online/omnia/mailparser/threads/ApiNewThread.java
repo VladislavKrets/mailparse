@@ -2,12 +2,9 @@ package online.omnia.mailparser.threads;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.google.gson.JsonSyntaxException;
 import online.omnia.mailparser.daoentities.*;
-import online.omnia.mailparser.utils.HttpMethodUtils;
 import online.omnia.mailparser.dao.MySQLAdsetDaoImpl;
 import online.omnia.mailparser.deserializers.JsonAdsetListDeserializer;
-import online.omnia.mailparser.deserializers.JsonTokenDeserializer;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -15,7 +12,6 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.nio.channels.AcceptPendingException;
 import java.sql.Time;
 import java.text.SimpleDateFormat;
 import java.util.Date;
