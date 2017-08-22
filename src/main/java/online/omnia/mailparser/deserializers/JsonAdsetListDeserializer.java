@@ -1,7 +1,6 @@
 package online.omnia.mailparser.deserializers;
 
 import com.google.gson.*;
-import online.omnia.mailparser.daoentities.Adset;
 import online.omnia.mailparser.utils.HttpMethodUtils;
 import online.omnia.mailparser.daoentities.AdsetEntity;
 

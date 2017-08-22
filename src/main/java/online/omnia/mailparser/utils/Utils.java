@@ -34,11 +34,13 @@ public class Utils {
 
     public static Properties createPropertiesFile(EmailAccessEntity emailAccessEntity) {
         Properties props = new Properties();
-        props.put("mail.imap.socketFactory.class", "javax.net.ssl.SSLSocketFactory");
+        if (emailAccessEntity.getSslOn() == 1) {
+            props.put("mail.imap.socketFactory.class", "javax.net.ssl.SSLSocketFactory");
+        }
         props.put("mail.imap.socketFactory.fallback", "false");
         props.put("mail.imap.socketFactory.port", emailAccessEntity.getServerPort());
         props.put("mail.imap.port", emailAccessEntity.getServerPort());
-        props.put("mail.imap.host", emailAccessEntity.getServerProtocol());
+        props.put("mail.imap.host", emailAccessEntity.getServerName().replaceAll(" ", ""));
         props.put("mail.imap.user", emailAccessEntity.getUsername());
         props.put("mail.store.protocol", "imap");
         //props.put("mail.debug", "true");
@@ -56,8 +58,25 @@ public class Utils {
                 logWriter = new FileWriter(file, true);
             }
             else {
-                File file = new File(path);
-                if (!file.exists()) file.createNewFile();
+                File file;
+                System.out.println(path);
+                String tempPath = path.replaceAll("\\\\", "/");
+
+                if (path.contains("/")) {
+                    String dirPath = tempPath.substring(0, tempPath.lastIndexOf("/"));
+                    file = new File(dirPath);
+                    if (!file.exists()){
+                        file.mkdirs();
+                        file = new File(path);
+                        file.createNewFile();
+                    }
+                }
+                else {
+                    file = new File(path);
+                    if (!file.exists()) {
+                        file.createNewFile();
+                    }
+                }
                 logWriter = new FileWriter(file, true);
             }
             Date date = new Date(System.currentTimeMillis());

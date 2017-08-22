@@ -5,6 +5,7 @@ import online.omnia.mailparser.dao.MySQLAdsetDaoImpl;
 import online.omnia.mailparser.daoentities.AdsetEntity;
 import online.omnia.mailparser.daoentities.EmailAccessEntity;
 import online.omnia.mailparser.daoentities.EmailSuccessEntity;
+import org.apache.commons.codec.binary.*;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -38,7 +39,7 @@ public class MailNewThread implements Runnable {
         this.accessEntity = emailAccessEntity;
         this.userName = emailAccessEntity.getUsername();
         this.password = emailAccessEntity.getPassword();
-        this.serverAddress = emailAccessEntity.getServerProtocol();
+        this.serverAddress = emailAccessEntity.getServerName().replaceAll(" ","");
         this.countDownLatch = countDownLatch;
     }
 
@@ -107,7 +108,7 @@ public class MailNewThread implements Runnable {
             folderInbox.close(false);
 
         } catch (MessagingException | IOException e) {
-
+            e.printStackTrace();
             System.out.println("error");
             MySQLAdsetDaoImpl.getInstance().addNewEmailSuccess(new EmailSuccessEntity(
                     null, 1, accessEntity.getId()
@@ -134,11 +135,14 @@ public class MailNewThread implements Runnable {
 
         if (currentDate.getTime() - message.getSentDate().getTime() <= 2592000000L) {
             Enumeration<Header> headerEnumeration = message.getAllHeaders();
+            BASE64Decoder base64Decoder = new BASE64Decoder();
             while (headerEnumeration.hasMoreElements()) {
-                Header header = headerEnumeration.nextElement();
-                if (header.getName().startsWith("Message-Id")) {
-                    messageId = header.getValue();
 
+                Header header = headerEnumeration.nextElement();
+
+                if (header.getName().equalsIgnoreCase("Message-Id")) {
+                    messageId = (org.apache.commons.codec.binary.Base64
+                            .isBase64(header.getValue()) ? new String(base64Decoder.decodeBuffer(header.getValue()), "UTF-8") : header.getValue());
                     try {
                         if (isMessageHandled(messageId)) {
                             System.out.println("message been handled");
@@ -164,7 +168,6 @@ public class MailNewThread implements Runnable {
             String[] split;
             if (address.equals(senderAddress)) {
                 message.writeTo(outputStream);
-                BASE64Decoder base64Decoder = new BASE64Decoder();
 
                 lines = outputStream.toString().replaceAll("\r", "").split("\n");
                 String line;
@@ -258,6 +261,7 @@ public class MailNewThread implements Runnable {
             if (headersList.contains("Date")) {
                 try {
                     adEntity.setDate(new SimpleDateFormat("yyyyMMdd").parse(trElements.get(headersList.indexOf("Date")).text()));
+                    adEntity.setTime(new Time(adEntity.getDate().getTime()));
                 } catch (ParseException e) {
                     e.printStackTrace();
                 }
@@ -283,17 +287,17 @@ public class MailNewThread implements Runnable {
                 adEntity.setSpent(Double.parseDouble(trElements.get(headersList.indexOf("Spent"))
                         .text().replaceAll("\\$", "")));
             }
-            if (headersList.contains("Clicks")) {
-                adEntity.setClicks(Integer.parseInt(trElements.get(headersList.indexOf("Clicks")).text()
-                        .replaceAll(",", "")));
-            }
             if (headersList.contains("Conversions")) {
                 adEntity.setConversions(Integer.parseInt(trElements.get(headersList.indexOf("Conversions")).text()));
             }
-            /*if (headersList.contains("CVR")) {
-                adEntity.setCr(Double.parseDouble(trElements.get(headersList.indexOf("CVR")).text()
-                        .replaceAll("%", "")));
-            }*/
+
+            if (headersList.contains("Clicks")) {
+                adEntity.setClicks(Integer.parseInt(trElements.get(headersList.indexOf("Clicks")).text()
+                        .replaceAll(",", "")));
+                if (adEntity.getClicks() != 0) adEntity.setCr(adEntity.getConversions() * 1.0 / adEntity.getClicks() * 100);
+
+            }
+
             if (headersList.contains("CPM")) {
                 adEntity.setCpm(Double.parseDouble(trElements.get(headersList.indexOf("CPM")).text()
                         .replaceAll("\\$", "")));
@@ -301,15 +305,13 @@ public class MailNewThread implements Runnable {
             if (headersList.contains("CPC")) {
                 adEntity.setCpc(Double.parseDouble(trElements.get(headersList.indexOf("CPC")).text()
                         .replaceAll("\\$", "")));
-                if (adEntity.getCpc() != 0) adEntity.setCr((adEntity.getConversions() / adEntity.getCpc()) * 100);
-            }
+               }
             if (headersList.contains("CPI")) {
                 adEntity.setCpi(Double.parseDouble(trElements.get(headersList.indexOf("CPI")).text()
                         .replaceAll("\\$", "")));
             }
             adEntity.setReceiver("E-MAIL");
-            adEntity.setTime(new Time(System.currentTimeMillis()));
-            adEntity.setDate(new Date());
+
         } catch (Exception e) {
             adEntity = null;
         }

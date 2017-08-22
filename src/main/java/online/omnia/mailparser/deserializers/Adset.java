@@ -1,4 +1,4 @@
-package online.omnia.mailparser.daoentities;
+package online.omnia.mailparser.deserializers;
 
 /**
  * Created by lollipop on 21.08.2017.
