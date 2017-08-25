@@ -61,7 +61,15 @@ public class MailNewThread implements Runnable {
 
             Store store = session.getStore("imap");
 
-            store.connect(serverAddress, userName, password);
+            try {
+                store.connect(serverAddress, userName, password);
+            } catch (AuthenticationFailedException e) {
+                e.printStackTrace();
+                MySQLAdsetDaoImpl.getInstance().addNewEmailSuccess(new EmailSuccessEntity(
+                        null, 1, accessEntity.getId()
+                ));
+                return;
+            }
             System.out.println("getting messages");
             getMessages(store.getFolder("INBOX"));
             store.close();
@@ -76,7 +84,8 @@ public class MailNewThread implements Runnable {
             } catch (IOException e1) {
                 e1.printStackTrace();
             }
-
+            System.out.println("Exception during connecting to mail");
+            e.printStackTrace();
         }
     }
 
@@ -118,6 +127,7 @@ public class MailNewThread implements Runnable {
             } catch (IOException e1) {
                 e1.printStackTrace();
             }
+
         }
 
     }
@@ -143,14 +153,11 @@ public class MailNewThread implements Runnable {
                 if (header.getName().equalsIgnoreCase("Message-Id")) {
                     messageId = (org.apache.commons.codec.binary.Base64
                             .isBase64(header.getValue()) ? new String(base64Decoder.decodeBuffer(header.getValue()), "UTF-8") : header.getValue());
-                    try {
+
                         if (isMessageHandled(messageId)) {
                             System.out.println("message been handled");
                             return;
                         }
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
                 }
             }
             System.out.println("Checked");
@@ -267,6 +274,8 @@ public class MailNewThread implements Runnable {
 
                 } catch (ParseException e) {
                     e.printStackTrace();
+                    System.out.println("Exception during parsing date");
+                    return;
                 }
             }
             if (headersList.contains("Campaign")) {
@@ -317,6 +326,8 @@ public class MailNewThread implements Runnable {
 
         } catch (Exception e) {
             adEntity = null;
+            System.out.println("Exception during parsing mail");
+            e.printStackTrace();
         }
     }
 

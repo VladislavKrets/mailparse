@@ -8,9 +8,11 @@ import org.hibernate.cfg.Configuration;
 
 import javax.persistence.NoResultException;
 import javax.persistence.PersistenceException;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.TimeZone;
 
 /**
  * Created by lollipop on 09.08.2017.
@@ -156,15 +158,22 @@ public class MySQLAdsetDaoImpl implements MySQLDao{
     public boolean isDateInAdsets(Date date, String adsetId) {
         Session session = sessionFactory.openSession();
         try {
-            session.createQuery("from AdsetEntity where adset_id=:adsetId and date=:date")
+            SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd");
+            simpleDateFormat.setTimeZone(TimeZone.getTimeZone("Etc/UTF"));
+            session.createQuery("from AdsetEntity where adset_id=:adsetId and date=:date", AdsetEntity.class)
             .setParameter("adsetId", adsetId)
-            .setParameter("date", date).getSingleResult();
+            .setParameter("date", simpleDateFormat.parse(simpleDateFormat.format(date))).getSingleResult();
             session.close();
             return true;
         } catch (NoResultException e) {
             session.close();
+            System.out.println("No adset with this date in db");
             return false;
         }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
+        return false;
     }
     public CheetahTokenEntity getToken(int accountId) {
         Session session = sessionFactory.openSession();

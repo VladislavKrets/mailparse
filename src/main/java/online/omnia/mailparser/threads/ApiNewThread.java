@@ -51,7 +51,7 @@ public class ApiNewThread implements Runnable{
                         + "\"groupby\":[\"datetime\",\"adset\"],"
                         + "\"filter\":{},"
                         + "\"start\":\"" + dateFormat.format(new Date(currentDate.getTime() - 86400000L)) + "\","
-                        + "\"end\":\"" + dateFormat.format(currentDate) + "\"}";
+                        + "\"end\":\"" + dateFormat.format(new Date(currentDate.getTime() - 86400000L)) + "\"}";
 
                 byte[] outputBytes = str.getBytes("UTF-8");
                 OutputStream os = httpcon.getOutputStream();
@@ -77,7 +77,8 @@ public class ApiNewThread implements Runnable{
                     adsetEntity.setAccountId(accountEntity.getAccountId());
                     adsetEntity.setReceiver("API");
                     adsetEntity.setTime(new Time(currentDate.getTime()));
-
+                    System.out.println(adsetEntity.getDate());
+                    System.out.println(adsetEntity.getAdsetId());
                     if (MySQLAdsetDaoImpl.getInstance().isDateInAdsets(adsetEntity.getDate(), adsetEntity.getAdsetId())) {
                         System.out.println("Updating adset");
                         MySQLAdsetDaoImpl.getInstance().updateAdset(adsetEntity);
