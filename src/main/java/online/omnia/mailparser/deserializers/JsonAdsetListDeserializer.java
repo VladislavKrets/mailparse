@@ -9,6 +9,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.TimeZone;
 
 /**
  * Created by lollipop on 17.08.2017.
@@ -46,12 +47,14 @@ public class JsonAdsetListDeserializer implements JsonDeserializer<List<AdsetEnt
         JsonArray array = data.getAsJsonObject().get("data").getAsJsonArray();
         AdsetEntity adsetEntity;
         JsonArray arrayElement;
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyyMMdd");
+        simpleDateFormat.setTimeZone(TimeZone.getTimeZone("Etc/UTC"));
         for (JsonElement element : array) {
             arrayElement = element.getAsJsonArray();
             adsetEntity = new AdsetEntity();
             if (titles.contains("datetime")) {
                 try {
-                    adsetEntity.setDate(new SimpleDateFormat("yyyyMMdd")
+                    adsetEntity.setDate(simpleDateFormat
                             .parse(arrayElement.get(titles.indexOf("datetime")).getAsString()));
                 } catch (ParseException e) {
                     e.printStackTrace();

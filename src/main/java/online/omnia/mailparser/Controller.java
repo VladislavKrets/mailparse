@@ -4,7 +4,8 @@ import online.omnia.mailparser.dao.MySQLAdsetDaoImpl;
 import online.omnia.mailparser.daoentities.AccountEntity;
 import online.omnia.mailparser.daoentities.EmailAccessEntity;
 import online.omnia.mailparser.daoentities.EmailSuccessEntity;
-import online.omnia.mailparser.threads.ApiNewThread;
+import online.omnia.mailparser.threads.ApiMonthThread;
+import online.omnia.mailparser.threads.ApiNewYesterdayThread;
 import online.omnia.mailparser.threads.MailCheckThread;
 import online.omnia.mailparser.threads.MailNewThread;
 import online.omnia.mailparser.utils.Utils;
@@ -18,7 +19,22 @@ import java.util.concurrent.Executors;
  * Created by lollipop on 10.08.2017.
  */
 public class Controller {
+    public void allApiNew() {
+        List<AccountEntity> accountEntities = MySQLAdsetDaoImpl.getInstance().getAccounts("API");
+        CountDownLatch countDownLatch = new CountDownLatch(accountEntities.size());
 
+        ExecutorService service = Executors.newFixedThreadPool(10);
+        for (AccountEntity accountEntity : accountEntities) {
+            service.submit(new ApiMonthThread(accountEntity, countDownLatch));
+        }
+        try {
+            countDownLatch.await();
+            service.shutdown();
+            MySQLAdsetDaoImpl.getSessionFactory().close();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
     public void cheetahNew() {
         System.out.println("Getting accounts for working with api");
         apiCheetahNew();
@@ -31,7 +47,7 @@ public class Controller {
 
         ExecutorService service = Executors.newFixedThreadPool(10);
         for (AccountEntity accountEntity : accountEntities) {
-            service.submit(new ApiNewThread(accountEntity, countDownLatch));
+            service.submit(new ApiNewYesterdayThread(accountEntity, countDownLatch));
         }
         try {
             countDownLatch.await();

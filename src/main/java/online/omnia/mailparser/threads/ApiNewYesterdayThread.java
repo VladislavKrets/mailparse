@@ -21,11 +21,11 @@ import java.util.concurrent.CountDownLatch;
 /**
  * Created by lollipop on 17.08.2017.
  */
-public class ApiNewThread implements Runnable{
+public class ApiNewYesterdayThread implements Runnable{
     private AccountEntity accountEntity;
     private CountDownLatch countDownLatch;
 
-    public ApiNewThread(AccountEntity accountEntity, CountDownLatch countDownLatch) {
+    public ApiNewYesterdayThread(AccountEntity accountEntity, CountDownLatch countDownLatch) {
         this.accountEntity = accountEntity;
         this.countDownLatch = countDownLatch;
     }
@@ -76,7 +76,6 @@ public class ApiNewThread implements Runnable{
                 for (AdsetEntity adsetEntity : entityList) {
                     adsetEntity.setAccountId(accountEntity.getAccountId());
                     adsetEntity.setReceiver("API");
-                    adsetEntity.setTime(new Time(currentDate.getTime()));
                     System.out.println(adsetEntity.getDate());
                     System.out.println(adsetEntity.getAdsetId());
                     if (MySQLAdsetDaoImpl.getInstance().isDateInAdsets(adsetEntity.getDate(), adsetEntity.getAdsetId())) {

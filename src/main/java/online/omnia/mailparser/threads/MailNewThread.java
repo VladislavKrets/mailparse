@@ -65,13 +65,22 @@ public class MailNewThread implements Runnable {
                 store.connect(serverAddress, userName, password);
             } catch (AuthenticationFailedException e) {
                 e.printStackTrace();
+                try {
+                    Utils.writeLog(userName, "<No message Id>", e.getMessage());
+                } catch (IOException e1) {
+                    e1.printStackTrace();
+                }
                 MySQLAdsetDaoImpl.getInstance().addNewEmailSuccess(new EmailSuccessEntity(
                         null, 1, accessEntity.getId()
                 ));
                 return;
             }
             System.out.println("getting messages");
-            getMessages(store.getFolder("INBOX"));
+            try {
+                getMessages(store.getFolder("INBOX"));
+            } catch (MessagingException e) {
+                e.printStackTrace();
+            }
             store.close();
         } catch (MessagingException e) {
             e.printStackTrace();

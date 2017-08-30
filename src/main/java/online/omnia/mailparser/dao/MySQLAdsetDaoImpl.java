@@ -158,11 +158,9 @@ public class MySQLAdsetDaoImpl implements MySQLDao{
     public boolean isDateInAdsets(Date date, String adsetId) {
         Session session = sessionFactory.openSession();
         try {
-            SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd");
-            simpleDateFormat.setTimeZone(TimeZone.getTimeZone("Etc/UTF"));
             session.createQuery("from AdsetEntity where adset_id=:adsetId and date=:date", AdsetEntity.class)
             .setParameter("adsetId", adsetId)
-            .setParameter("date", simpleDateFormat.parse(simpleDateFormat.format(date))).getSingleResult();
+            .setParameter("date", date).getSingleResult();
             session.close();
             return true;
         } catch (NoResultException e) {
