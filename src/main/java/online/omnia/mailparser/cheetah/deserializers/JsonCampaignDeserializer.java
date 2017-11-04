@@ -1,4 +1,4 @@
-package online.omnia.mailparser.deserializers;
+package online.omnia.mailparser.cheetah.deserializers;
 
 import com.google.gson.*;
 

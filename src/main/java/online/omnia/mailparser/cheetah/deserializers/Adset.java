@@ -1,4 +1,4 @@
-package online.omnia.mailparser.deserializers;
+package online.omnia.mailparser.cheetah.deserializers;
 
 /**
  * Created by lollipop on 21.08.2017.

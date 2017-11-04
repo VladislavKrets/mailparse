@@ -1,11 +1,11 @@
-package online.omnia.mailparser.threads;
+package online.omnia.mailparser.cheetah.threads;
 
+import online.omnia.mailparser.daoentities.AbstractAdsetEntity;
+import online.omnia.mailparser.daoentities.AccountEntity;
 import online.omnia.mailparser.utils.Utils;
 import online.omnia.mailparser.dao.MySQLAdsetDaoImpl;
-import online.omnia.mailparser.daoentities.AdsetEntity;
 import online.omnia.mailparser.daoentities.EmailAccessEntity;
 import online.omnia.mailparser.daoentities.EmailSuccessEntity;
-import org.apache.commons.codec.binary.*;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -14,7 +14,6 @@ import sun.misc.BASE64Decoder;
 
 import javax.mail.*;
 import java.io.*;
-import java.sql.Time;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -31,6 +30,7 @@ public class MailNewThread implements Runnable {
     protected String serverAddress;
     protected EmailAccessEntity accessEntity;
     protected CountDownLatch countDownLatch;
+    private AccountEntity accountEntity;
 
     public MailNewThread(String senderAddress, Properties props,
                          EmailAccessEntity emailAccessEntity, CountDownLatch countDownLatch) {
@@ -41,11 +41,15 @@ public class MailNewThread implements Runnable {
         this.password = emailAccessEntity.getPassword();
         this.serverAddress = emailAccessEntity.getServerName().replaceAll(" ","");
         this.countDownLatch = countDownLatch;
+        accountEntity = MySQLAdsetDaoImpl.getInstance().getAccount(accessEntity.getAccountId());
+
     }
 
     @Override
     public void run() {
-        connect();
+        if (accountEntity.getActual() == 1) {
+            connect();
+        }
         countDownLatch.countDown();
     }
 
@@ -150,7 +154,7 @@ public class MailNewThread implements Runnable {
         Address[] addresses;
         String[] splittedAddress;
         String address;
-        List<AdsetEntity> adsetEntities = null;
+        List<AbstractAdsetEntity> adsetEntities = null;
 
         if (currentDate.getTime() - message.getSentDate().getTime() <= 2592000000L) {
             Enumeration<Header> headerEnumeration = message.getAllHeaders();
@@ -186,6 +190,7 @@ public class MailNewThread implements Runnable {
                 message.writeTo(outputStream);
 
                 lines = outputStream.toString().replaceAll("\r", "").split("\n");
+
                 String line;
                 for (int i = 0; i < lines.length; i++) {
                     if (lines[i] == null) break;
@@ -212,9 +217,10 @@ public class MailNewThread implements Runnable {
                     return;
                 }
 
-                for (AdsetEntity adsetEntity : adsetEntities) {
-                    adsetEntity.setAccountId(accessEntity.getAccountId());
-                    MySQLAdsetDaoImpl.getInstance().addAdset(adsetEntity);
+                for (AbstractAdsetEntity abstractAdsetEntity : adsetEntities) {
+                    abstractAdsetEntity.setAccountId(accessEntity.getAccountId());
+                    abstractAdsetEntity.setBuyerId(accountEntity.getBuyerId());
+                    MySQLAdsetDaoImpl.getInstance().addAdset(abstractAdsetEntity);
                 }
 
                 MySQLAdsetDaoImpl.getInstance().addNewEmailSuccess(new EmailSuccessEntity(
@@ -230,7 +236,7 @@ public class MailNewThread implements Runnable {
         }
     }
 
-    public List<AdsetEntity> parseMessage(String html) {
+    public List<AbstractAdsetEntity> parseMessage(String html) {
         Document doc = Jsoup.parse(html.replaceAll("&lt;", "<").replaceAll("&gt;", ">"));
         Element table = doc.body().select("table").last();
 
@@ -241,12 +247,12 @@ public class MailNewThread implements Runnable {
         }
         Elements body = table.select("tbody").select("tr");
         Elements trElements;
-        List<AdsetEntity> adsetEntities = new ArrayList<>();
+        List<AbstractAdsetEntity> adsetEntities = new ArrayList<>();
         String[] splitName;
-        AdsetEntity adEntity;
+        AbstractAdsetEntity adEntity;
         for (Element trElement : body) {
             trElements = trElement.select("td");
-            adEntity = new AdsetEntity();
+            adEntity = new AbstractAdsetEntity();
             buildAdset(headersList, trElements, adEntity);
             if (adEntity == null) {
                 return null;
@@ -262,7 +268,7 @@ public class MailNewThread implements Runnable {
         return adsetEntities;
     }
 
-    private void buildAdset(List<String> headersList, Elements trElements, AdsetEntity adEntity) {
+    private void buildAdset(List<String> headersList, Elements trElements, AbstractAdsetEntity adEntity) {
         String[] splitName;
         SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyyMMdd");
         TimeZone.setDefault(TimeZone.getTimeZone("Etc/UTC"));
@@ -279,7 +285,7 @@ public class MailNewThread implements Runnable {
             if (headersList.contains("Date")) {
                 try {
                     adEntity.setDate(simpleDateFormat.parse(trElements.get(headersList.indexOf("Date")).text()));
-                    adEntity.setTime(new Time(adEntity.getDate().getTime()));
+                    //adEntity.setTime(new Time(adEntity.getDate().getTime()));
 
                 } catch (ParseException e) {
                     e.printStackTrace();

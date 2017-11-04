@@ -1,4 +1,4 @@
-package online.omnia.mailparser.threads;
+package online.omnia.mailparser.cheetah.threads;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -6,15 +6,13 @@ import online.omnia.mailparser.dao.MySQLAdsetDaoImpl;
 import online.omnia.mailparser.daoentities.AccountEntity;
 import online.omnia.mailparser.daoentities.AdsetEntity;
 import online.omnia.mailparser.daoentities.CheetahTokenEntity;
-import online.omnia.mailparser.deserializers.JsonAdsetListDeserializer;
+import online.omnia.mailparser.cheetah.deserializers.JsonAdsetListDeserializer;
 
 import java.io.BufferedReader;
-import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.sql.Time;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
@@ -75,24 +73,24 @@ public class ApiNewTodayThread implements Runnable{
                     countDownLatch.countDown();
                     return;
                 }
-                for (AdsetEntity adsetEntity : entityList) {
+                /*for (AdsetEntity adsetEntity : entityList) {
                     adsetEntity.setAccountId(accountEntity.getAccountId());
                     adsetEntity.setReceiver("API");
-                    adsetEntity.setTime(new Time(adsetEntity.getDate().getTime()));
+                    adsetEntity.setTime(new Time(System.currentTimeMillis() + 10800000L));
                     System.out.println(adsetEntity.getDate());
                     System.out.println(adsetEntity.getAdsetId());
-                    if (MySQLAdsetDaoImpl.getInstance().isDateInAdsets(adsetEntity.getDate(), adsetEntity.getAdsetId())) {
+                    if (MySQLAdsetDaoImpl.getInstance().isDateInTodayAdsets(adsetEntity.getDate(), adsetEntity.getAdsetId())) {
                         System.out.println("Updating adset");
-                        MySQLAdsetDaoImpl.getInstance().updateAdset(adsetEntity);
+                        MySQLAdsetDaoImpl.getInstance().updateTodayAdset(adsetEntity);
                     }
                     else{
                         System.out.println("Adding adset");
-                        MySQLAdsetDaoImpl.getInstance().addAdset(adsetEntity);
+                        MySQLAdsetDaoImpl.getInstance().addTodayAdset(adsetEntity);
                     }
                     System.out.println("CR: " + adsetEntity.getCr());
 
-                }
-            } catch (IOException e) {
+                }*/
+            } catch (Exception e) {
                 e.printStackTrace();
             }
 

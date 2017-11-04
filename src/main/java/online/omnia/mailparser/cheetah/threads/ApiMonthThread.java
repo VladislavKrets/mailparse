@@ -1,12 +1,12 @@
-package online.omnia.mailparser.threads;
+package online.omnia.mailparser.cheetah.threads;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import online.omnia.mailparser.dao.MySQLAdsetDaoImpl;
 import online.omnia.mailparser.daoentities.AccountEntity;
-import online.omnia.mailparser.daoentities.AdsetEntity;
+import online.omnia.mailparser.daoentities.AbstractAdsetEntity;
 import online.omnia.mailparser.daoentities.CheetahTokenEntity;
-import online.omnia.mailparser.deserializers.JsonAdsetListDeserializer;
+import online.omnia.mailparser.cheetah.deserializers.JsonAdsetListDeserializer;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -14,7 +14,6 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.sql.Time;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -58,7 +57,7 @@ public class ApiMonthThread implements Runnable{
                 byte[] outputBytes;
                 OutputStream os;
                 BufferedReader reader;
-                List<AdsetEntity> entityList;
+                List<AbstractAdsetEntity> entityList;
                 Date date;
                 for (long i = firstDate.getTime(); i <= currentDate.getTime(); i += 86400000L) {
                     httpcon = (HttpURLConnection) ((new URL("https://api.ori.cmcm.com/report/advertiser").openConnection()));
@@ -95,18 +94,18 @@ public class ApiMonthThread implements Runnable{
                         continue;
 
                     }
-                    for (AdsetEntity adsetEntity : entityList) {
-                        adsetEntity.setAccountId(accountEntity.getAccountId());
-                        adsetEntity.setReceiver("API");
-                        System.out.println(adsetEntity.getDate());
-                        System.out.println(adsetEntity.getAdsetId());
-                        if (MySQLAdsetDaoImpl.getInstance().isDateInAdsets(adsetEntity.getDate(), adsetEntity.getAdsetId())) {
+                    for (AbstractAdsetEntity abstractAdsetEntity : entityList) {
+                        abstractAdsetEntity.setAccountId(accountEntity.getAccountId());
+                        abstractAdsetEntity.setReceiver("API");
+                        System.out.println(abstractAdsetEntity.getDate());
+                        System.out.println(abstractAdsetEntity.getAdsetId());
+                      /*  if (MySQLAdsetDaoImpl.getInstance().isDateInAdsets(abstractAdsetEntity.getDate(), abstractAdsetEntity.getAdsetId())) {
                             System.out.println("Updating adset");
-                            MySQLAdsetDaoImpl.getInstance().updateAdset(adsetEntity);
+                            MySQLAdsetDaoImpl.getInstance().updateAdset(abstractAdsetEntity);
                         } else {
                             System.out.println("Adding adset");
-                            MySQLAdsetDaoImpl.getInstance().addAdset(adsetEntity);
-                        }
+                            MySQLAdsetDaoImpl.getInstance().addAdset(abstractAdsetEntity);
+                        }*/
                     }
                 }
                 } catch(IOException | ParseException e){

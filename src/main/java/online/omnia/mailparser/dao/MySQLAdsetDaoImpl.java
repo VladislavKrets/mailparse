@@ -8,11 +8,9 @@ import org.hibernate.cfg.Configuration;
 
 import javax.persistence.NoResultException;
 import javax.persistence.PersistenceException;
-import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
-import java.util.TimeZone;
 
 /**
  * Created by lollipop on 09.08.2017.
@@ -24,11 +22,12 @@ public class MySQLAdsetDaoImpl implements MySQLDao{
 
     static {
         configuration = new Configuration()
-                .addAnnotatedClass(AdsetEntity.class)
+                .addAnnotatedClass(AbstractAdsetEntity.class)
                 .addAnnotatedClass(EmailAccessEntity.class)
                 .addAnnotatedClass(EmailSuccessEntity.class)
                 .addAnnotatedClass(CheetahTokenEntity.class)
                 .addAnnotatedClass(AccountEntity.class)
+                //.addAnnotatedClass(AdsetEntity.class)
                 .configure("/hibernate_adset.cfg.xml");
         Map<String, String> properties = Utils.iniFileReader();
         configuration.setProperty("hibernate.connection.password", properties.get("password"));
@@ -55,7 +54,14 @@ public class MySQLAdsetDaoImpl implements MySQLDao{
         }
 
     }
-
+    public AccountEntity getAccount(int id) {
+        Session session = sessionFactory.openSession();
+        AccountEntity accountEntity = session.createQuery("from AccountEntity where account_id=:id", AccountEntity.class)
+                .setParameter("id", id)
+                .getSingleResult();
+        session.close();
+        return accountEntity;
+    }
     @Override
     public List<EmailAccessEntity> getMailsByCheck(int check, String statisticType) {
         Session session = sessionFactory.openSession();
@@ -113,14 +119,20 @@ public class MySQLAdsetDaoImpl implements MySQLDao{
     }
 
     @Override
-    public synchronized void addAdset(AdsetEntity adsetEntity) {
+    public synchronized void addAdset(AbstractAdsetEntity abstractAdsetEntity) {
+        Session session = sessionFactory.openSession();
+        session.beginTransaction();
+        session.save(abstractAdsetEntity);
+        session.getTransaction().commit();
+        session.close();
+    }
+    public synchronized void addTodayAdset(AdsetEntity adsetEntity) {
         Session session = sessionFactory.openSession();
         session.beginTransaction();
         session.save(adsetEntity);
         session.getTransaction().commit();
         session.close();
     }
-
     @Override
     public EmailAccessEntity getAccessById(int id) {
         Session session = sessionFactory.openSession();
@@ -135,10 +147,30 @@ public class MySQLAdsetDaoImpl implements MySQLDao{
         return accessEntity;
     }
 
-    public synchronized void updateAdset(AdsetEntity adsetEntity) {
+    public synchronized void updateAdset(AbstractAdsetEntity abstractAdsetEntity) {
         Session session = sessionFactory.openSession();
         session.beginTransaction();
-        session.createQuery("update AdsetEntity set CTR=:ctr, date=:date, impressions=:impressions, spent=:spent, clicks=:clicks, CR=:cr, CPC=:cpc, CPM=:cpm, conversions=:conversions, CPI=:cpi where adset_id=:adsetId and account_id=:accountId")
+        session.createQuery("update AbstractAdsetEntity set CTR=:ctr, date=:date, impressions=:impressions, spent=:spent, clicks=:clicks, CR=:cr, CPC=:cpc, CPM=:cpm, conversions=:conversions, CPI=:cpi where adset_id=:adsetId and account_id=:accountId")
+                .setParameter("ctr", abstractAdsetEntity.getCtr())
+                .setParameter("date", abstractAdsetEntity.getDate())
+                .setParameter("impressions", abstractAdsetEntity.getImpressions())
+                .setParameter("spent", abstractAdsetEntity.getSpent())
+                .setParameter("clicks", abstractAdsetEntity.getClicks())
+                .setParameter("cr", abstractAdsetEntity.getCr())
+                .setParameter("cpc", abstractAdsetEntity.getCpc())
+                .setParameter("cpm", abstractAdsetEntity.getCpm())
+                .setParameter("conversions", abstractAdsetEntity.getConversions())
+                .setParameter("cpi", abstractAdsetEntity.getCpi())
+                .setParameter("adsetId", abstractAdsetEntity.getAdsetId())
+                .setParameter("accountId", abstractAdsetEntity.getAccountId())
+                .executeUpdate();
+        session.getTransaction().commit();
+        session.close();
+    }
+    public synchronized void updateTodayAdset(AdsetEntity adsetEntity) {
+        Session session = sessionFactory.openSession();
+        session.beginTransaction();/*
+        session.createQuery("update AdsetEntity set CTR=:ctr, date=:date, impressions=:impressions, spent=:spent, clicks=:clicks, CR=:cr, CPC=:cpc, CPM=:cpm, conversions=:conversions, CPI=:cpi, time=:time where adset_id=:adsetId and account_id=:accountId")
                 .setParameter("ctr", adsetEntity.getCtr())
                 .setParameter("date", adsetEntity.getDate())
                 .setParameter("impressions", adsetEntity.getImpressions())
@@ -151,16 +183,17 @@ public class MySQLAdsetDaoImpl implements MySQLDao{
                 .setParameter("cpi", adsetEntity.getCpi())
                 .setParameter("adsetId", adsetEntity.getAdsetId())
                 .setParameter("accountId", adsetEntity.getAccountId())
-                .executeUpdate();
+                .setParameter("time", adsetEntity.getTime())
+                .executeUpdate();*/
         session.getTransaction().commit();
         session.close();
     }
-    public boolean isDateInAdsets(Date date, String adsetId) {
+    public boolean isDateInTodayAdsets(Date date, String adsetId) {
         Session session = sessionFactory.openSession();
         try {
-            session.createQuery("from AdsetEntity where adset_id=:adsetId and date=:date", AdsetEntity.class)
-            .setParameter("adsetId", adsetId)
-            .setParameter("date", date).getSingleResult();
+            session.createQuery("from AdsetEntity where adset_id=:adsetId and date=:date", AbstractAdsetEntity.class)
+                    .setParameter("adsetId", adsetId)
+                    .setParameter("date", date).getSingleResult();
             session.close();
             return true;
         } catch (NoResultException e) {
@@ -173,6 +206,50 @@ public class MySQLAdsetDaoImpl implements MySQLDao{
         }
         return false;
     }
+    public boolean isDateInAdsets(Date date, String adsetId, int accountId, String campaignId) {
+        Session session = sessionFactory.openSession();
+        try {
+            session.createQuery("from AbstractAdsetEntity where adset_id=:adsetId and date=:date and account_id=:accountId and campaign_id=:campaignId", AbstractAdsetEntity.class)
+            .setParameter("adsetId", adsetId)
+            .setParameter("date", date)
+            .setParameter("accountId", accountId)
+            .setParameter("campaignId", campaignId)
+            .getSingleResult();
+            session.close();
+            return true;
+        } catch (NoResultException e) {
+            session.close();
+            System.out.println("No adset with this date in db");
+            return false;
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    public boolean isDateInAdsets(Date date, int accountId, String campaignId) {
+        System.out.println(date);
+        Session session = sessionFactory.openSession();
+        try {
+            session.createQuery("from AbstractAdsetEntity where date=:date and account_id=:accountId and campaign_id=:campaignId", AbstractAdsetEntity.class)
+                    .setParameter("date", date)
+                    .setParameter("accountId", accountId)
+                    .setParameter("campaignId", campaignId)
+                    .getSingleResult();
+            session.close();
+            return true;
+        } catch (NoResultException e) {
+            session.close();
+            System.out.println("No adset with this date in db");
+            return false;
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
     public CheetahTokenEntity getToken(int accountId) {
         Session session = sessionFactory.openSession();
         CheetahTokenEntity entity = session.createQuery("from CheetahTokenEntity where account_id=:accountId", CheetahTokenEntity.class)
@@ -183,7 +260,7 @@ public class MySQLAdsetDaoImpl implements MySQLDao{
 
     public List<AccountEntity> getAccounts(String type) {
         Session session = sessionFactory.openSession();
-        List<AccountEntity> accountEntities = session.createQuery("from AccountEntity where statistics_type=:statisticsType", AccountEntity.class)
+        List<AccountEntity> accountEntities = session.createQuery("from AccountEntity acc where acc.type=:statisticsType", AccountEntity.class)
                 .setParameter("statisticsType", type).getResultList();
         session.close();
         return accountEntities;

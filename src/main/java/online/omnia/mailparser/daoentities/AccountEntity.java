@@ -40,6 +40,8 @@ public class AccountEntity {
     private String cabinetType;
     @Column(name = "description")
     private String description;
+    @Column(name = "actual")
+    private int actual;
 
     public AccountEntity() {
     }
@@ -98,5 +100,9 @@ public class AccountEntity {
 
     public String getDescription() {
         return description;
+    }
+
+    public int getActual() {
+        return actual;
     }
 }

@@ -10,11 +10,12 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.message.BasicNameValuePair;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.UnsupportedEncodingException;
+import java.io.*;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -29,30 +30,20 @@ public class HttpMethodUtils {
     public HttpMethodUtils() {
 
     }
-    public static String getToken(String clientId, String clientCredentials){
-        try {
-            HttpPost httpPost = new HttpPost(baseUrl + "oauth/access_token");
-            List<NameValuePair> nameValuePairs = new ArrayList<>();
-            nameValuePairs.add(new BasicNameValuePair("grant_type", "client_credentials"));
-            nameValuePairs.add(new BasicNameValuePair("client_id", clientId));
-            nameValuePairs.add(new BasicNameValuePair("client_secret", clientCredentials));
-            httpPost.setEntity(new UrlEncodedFormEntity(nameValuePairs));
-            return getResponse(httpPost);
-        } catch (IOException e) {
-            System.out.println("Input output exception during getting access token:");
-            System.out.println(e.getMessage());
-        }
-        return "";
-    }
+
     public static String getMethod(String urlPath, String token){
         try {
             if (urlPath == null) return null;
-            HttpGet httpGet = new HttpGet(baseUrl + urlPath);
-            httpGet.addHeader("Authorization", "Bearer " + token);
+            HttpGet httpGet = new HttpGet(urlPath);
+            if (token != null) {
+                if (token.contains("Bearer ")) httpGet.addHeader("Authorization", token);
+                else httpGet.addHeader("api-token", token);
+            }
+
             return getResponse(httpGet);
         } catch (IOException e) {
             System.out.println("Input output exception during executing get request:");
-            System.out.println(e.getMessage());
+            e.printStackTrace();
         }
         return "";
     }
@@ -60,13 +51,14 @@ public class HttpMethodUtils {
     public static String postMethod(String urlPath, List<NameValuePair> params, String token){
         try {
             if (urlPath == null || params == null) return null;
-            HttpPost httpPost = new HttpPost(baseUrl + urlPath);
-            httpPost.addHeader("Authorization", "Bearer " + token);
+            HttpPost httpPost = new HttpPost(urlPath);
+            httpPost.addHeader("api-token", token);
             httpPost.setEntity(new UrlEncodedFormEntity(params));
 
             return getResponse(httpPost);
         } catch (IOException e) {
             System.out.println("Input output exception during executing post request:");
+            e.printStackTrace();
             System.out.println(e.getMessage());
         }
         return "";

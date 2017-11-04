@@ -1,4 +1,4 @@
-package online.omnia.mailparser.deserializers;
+package online.omnia.mailparser.cheetah.deserializers;
 
 import com.google.gson.*;
 
@@ -12,6 +12,7 @@ public class JsonAdsetDeserializer implements JsonDeserializer<Adset>{
     public Adset deserialize(JsonElement jsonElement, Type type,
                               JsonDeserializationContext jsonDeserializationContext) throws JsonParseException {
         JsonObject object = jsonElement.getAsJsonObject();
+        System.out.println(jsonElement);
         String status = object.get("status").getAsString();
         String message = object.get("message").getAsString();
         System.out.println(status + " " + message);

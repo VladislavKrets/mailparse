@@ -1,6 +1,6 @@
 package online.omnia.mailparser.dao;
 
-import online.omnia.mailparser.daoentities.AdsetEntity;
+import online.omnia.mailparser.daoentities.AbstractAdsetEntity;
 import online.omnia.mailparser.daoentities.EmailAccessEntity;
 import online.omnia.mailparser.daoentities.EmailSuccessEntity;
 
@@ -15,6 +15,6 @@ public interface MySQLDao {
     void addNewEmailSuccess(EmailSuccessEntity emailSuccessEntity);
     List<EmailSuccessEntity> getEmailSuccess(int firstSuccessValue, int secondSuccessValue);
     void updateSuccessEntity(EmailSuccessEntity emailSuccessEntity);
-    void addAdset(AdsetEntity adsetEntity);
+    void addAdset(AbstractAdsetEntity abstractAdsetEntity);
     EmailAccessEntity getAccessById(int id);
 }

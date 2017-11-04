@@ -1,8 +1,8 @@
-package online.omnia.mailparser.threads;
+package online.omnia.mailparser.cheetah.threads;
 
+import online.omnia.mailparser.daoentities.AbstractAdsetEntity;
 import online.omnia.mailparser.utils.Utils;
 import online.omnia.mailparser.dao.MySQLAdsetDaoImpl;
-import online.omnia.mailparser.daoentities.AdsetEntity;
 import online.omnia.mailparser.daoentities.EmailAccessEntity;
 import online.omnia.mailparser.daoentities.EmailSuccessEntity;
 
@@ -36,7 +36,7 @@ public class MailCheckThread extends MailNewThread{
         Address[] addresses;
         String[] splittedAddress;
         String address;
-        List<AdsetEntity> adsetEntities;
+        List<AbstractAdsetEntity> adsetEntities;
         if (currentDate.getTime() - message.getSentDate().getTime() <= 2592000000L) {
             Enumeration<Header> headerEnumeration = message.getAllHeaders();
             while (headerEnumeration.hasMoreElements()) {
@@ -86,9 +86,9 @@ public class MailCheckThread extends MailNewThread{
 
                 //ToDo
 
-                for (AdsetEntity adsetEntity : adsetEntities) {
-                    adsetEntity.setAccountId(accessEntity.getAccountId());
-                    MySQLAdsetDaoImpl.getInstance().addAdset(adsetEntity);
+                for (AbstractAdsetEntity abstractAdsetEntity : adsetEntities) {
+                    abstractAdsetEntity.setAccountId(accessEntity.getAccountId());
+                    MySQLAdsetDaoImpl.getInstance().addAdset(abstractAdsetEntity);
                 }
                 emailSuccessEntity.setSuccess(0);
                 MySQLAdsetDaoImpl.getInstance().updateSuccessEntity(emailSuccessEntity);

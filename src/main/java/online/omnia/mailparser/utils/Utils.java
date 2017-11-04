@@ -17,7 +17,7 @@ public class Utils {
     private static String path;
     public static synchronized Map<String, String> iniFileReader() {
         Map<String, String> properties = new HashMap<>();
-        try(BufferedReader iniFileReader = new BufferedReader(new FileReader("email_cheetah.ini"))) {
+        try(BufferedReader iniFileReader = new BufferedReader(new FileReader("sources_stat.ini"))) {
             String property;
             String[] propertyArray;
             while ((property = iniFileReader.readLine()) != null) {
