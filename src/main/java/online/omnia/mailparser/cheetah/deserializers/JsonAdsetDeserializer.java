@@ -20,8 +20,8 @@ public class JsonAdsetDeserializer implements JsonDeserializer<Adset>{
         if (dataElement != null) {
             return new Adset(
                     dataElement.getAsJsonObject().get("name").getAsString(),
-                    dataElement.getAsJsonObject().get("campaign_id").getAsString()
-            );
+                    dataElement.getAsJsonObject().get("campaign_id").getAsString(),
+                    dataElement.getAsJsonObject().get("click_url").getAsString());
 
         }
         return null;

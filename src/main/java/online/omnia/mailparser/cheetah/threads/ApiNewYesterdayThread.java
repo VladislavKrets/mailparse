@@ -49,8 +49,8 @@ public class ApiNewYesterdayThread implements Runnable{
                 String str = "{\"column\":[\"impression\",\"click\",\"conversion\",\"revenue\",\"cpc\",\"cpi\",\"cpm\",\"ctr\",\"cvr\",\"cpv\"],"
                         + "\"groupby\":[\"datetime\",\"adset\"],"
                         + "\"filter\":{},"
-                        + "\"start\":\"" + dateFormat.format(new Date(currentDate.getTime() - 86400000L)) + "\","
-                        + "\"end\":\"" + dateFormat.format(new Date(currentDate.getTime() - 86400000L)) + "\"}";
+                        + "\"start\":\"" + dateFormat.format(new Date(currentDate.getTime() - 2592000000L)) + "\","
+                        + "\"end\":\"" + dateFormat.format(new Date(currentDate.getTime())) + "\"}";
 
                 byte[] outputBytes = str.getBytes("UTF-8");
                 OutputStream os = httpcon.getOutputStream();
@@ -73,6 +73,7 @@ public class ApiNewYesterdayThread implements Runnable{
                     System.out.println(countDownLatch);
                     return;
                 }
+                AbstractAdsetEntity adsetEntity;
                 for (AbstractAdsetEntity abstractAdsetEntity : entityList) {
                     abstractAdsetEntity.setAccountId(accountEntity.getAccountId());
                     abstractAdsetEntity.setReceiver("API");
@@ -81,9 +82,13 @@ public class ApiNewYesterdayThread implements Runnable{
 
                     System.out.println(abstractAdsetEntity.getDate());
                     System.out.println(abstractAdsetEntity.getAdsetId());
-                    if (MySQLAdsetDaoImpl.getInstance().isDateInAdsets(abstractAdsetEntity.getDate(), abstractAdsetEntity.getAdsetId(), abstractAdsetEntity.getAccountId(), abstractAdsetEntity.getCampaignId())) {
-                        System.out.println("Updating adset");
-                        MySQLAdsetDaoImpl.getInstance().updateAdset(abstractAdsetEntity);
+                    adsetEntity = MySQLAdsetDaoImpl.getInstance().isDateInAdsets(abstractAdsetEntity.getDate(),
+                            abstractAdsetEntity.getAdsetId(), abstractAdsetEntity.getAccountId(), abstractAdsetEntity.getCampaignId());
+                    if (adsetEntity != null) {
+                        if (adsetEntity.getSpent() != abstractAdsetEntity.getSpent()) {
+                            System.out.println("Updating adset");
+                            MySQLAdsetDaoImpl.getInstance().updateAdset(abstractAdsetEntity);
+                        }
                     }
                     else{
                         System.out.println("Adding adset");

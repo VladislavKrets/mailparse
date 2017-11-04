@@ -3,12 +3,14 @@ package online.omnia.mailparser.cheetah.deserializers;
 import com.google.gson.*;
 import online.omnia.mailparser.daoentities.AbstractAdsetEntity;
 import online.omnia.mailparser.utils.HttpMethodUtils;
+import online.omnia.mailparser.utils.Utils;
 
 import java.lang.reflect.Type;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.TimeZone;
 
 /**
@@ -95,7 +97,11 @@ public class JsonAdsetListDeserializer implements JsonDeserializer<List<Abstract
                 builder.registerTypeAdapter(String.class, new JsonCampaignDeserializer());
                 Gson gson = builder.create();
                 Adset adset = gson.fromJson(answer, Adset.class);
-
+                Map<String, String> parameters = Utils.getUrlParameters(adset.getClickUrl());
+                if (parameters.containsKey("cab")) {
+                    adsetEntity.setAfid(Integer.parseInt(parameters.get("cab")));
+                }
+                else adsetEntity.setAfid(2);
                 adsetEntity.setAdsetName(adset.getAdsetName());
                 adsetEntity.setCampaignId(adset.getCampaignId());
                 answer = HttpMethodUtils.getMethod("https://api.ori.cmcm.com/campaign/" + adsetEntity.getCampaignId(), "Bearer " + token);

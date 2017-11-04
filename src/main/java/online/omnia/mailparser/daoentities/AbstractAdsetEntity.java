@@ -14,6 +14,8 @@ public class AbstractAdsetEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
     private int id;
+    @Column(name = "afid")
+    private int afid;
     @Column(name = "account_id")
     private int accountId;
     @Column(name = "adset_id")
@@ -212,5 +214,13 @@ public class AbstractAdsetEntity {
 
     public void setBuyerId(Integer buyerId) {
         this.buyerId = buyerId;
+    }
+
+    public int getAfid() {
+        return afid;
+    }
+
+    public void setAfid(int afid) {
+        this.afid = afid;
     }
 }

@@ -206,26 +206,26 @@ public class MySQLAdsetDaoImpl implements MySQLDao{
         }
         return false;
     }
-    public boolean isDateInAdsets(Date date, String adsetId, int accountId, String campaignId) {
+    public AbstractAdsetEntity isDateInAdsets(Date date, String adsetId, int accountId, String campaignId) {
         Session session = sessionFactory.openSession();
         try {
-            session.createQuery("from AbstractAdsetEntity where adset_id=:adsetId and date=:date and account_id=:accountId and campaign_id=:campaignId", AbstractAdsetEntity.class)
+            AbstractAdsetEntity adsetEntity = session.createQuery("from AbstractAdsetEntity where adset_id=:adsetId and date=:date and account_id=:accountId and campaign_id=:campaignId", AbstractAdsetEntity.class)
             .setParameter("adsetId", adsetId)
             .setParameter("date", date)
             .setParameter("accountId", accountId)
             .setParameter("campaignId", campaignId)
             .getSingleResult();
             session.close();
-            return true;
+            return adsetEntity;
         } catch (NoResultException e) {
             session.close();
             System.out.println("No adset with this date in db");
-            return false;
+            return null;
         }
         catch (Exception e) {
             e.printStackTrace();
         }
-        return false;
+        return null;
     }
 
     public boolean isDateInAdsets(Date date, int accountId, String campaignId) {
