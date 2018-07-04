@@ -105,4 +105,25 @@ public class AccountEntity {
     public int getActual() {
         return actual;
     }
+
+    @Override
+    public String toString() {
+        return "AccountEntity{" +
+                "accountId=" + accountId +
+                ", buyerId=" + buyerId +
+                ", tokenTableName='" + tokenTableName + '\'' +
+                ", clientId='" + clientId + '\'' +
+                ", clientSecret='" + clientSecret + '\'' +
+                ", apiKey='" + apiKey + '\'' +
+                ", username='" + username + '\'' +
+                ", type='" + type + '\'' +
+                ", password='" + password + '\'' +
+                ", apiURL='" + apiURL + '\'' +
+                ", owner='" + owner + '\'' +
+                ", statisticsType='" + statisticsType + '\'' +
+                ", cabinetType='" + cabinetType + '\'' +
+                ", description='" + description + '\'' +
+                ", actual=" + actual +
+                '}';
+    }
 }

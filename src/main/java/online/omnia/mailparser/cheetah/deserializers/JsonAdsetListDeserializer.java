@@ -1,11 +1,13 @@
 package online.omnia.mailparser.cheetah.deserializers;
 
 import com.google.gson.*;
+import online.omnia.mailparser.dao.MySQLAdsetDaoImpl;
 import online.omnia.mailparser.daoentities.AbstractAdsetEntity;
 import online.omnia.mailparser.utils.HttpMethodUtils;
 import online.omnia.mailparser.utils.Utils;
 
 import java.lang.reflect.Type;
+import java.sql.Date;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -56,8 +58,8 @@ public class JsonAdsetListDeserializer implements JsonDeserializer<List<Abstract
             adsetEntity = new AbstractAdsetEntity();
             if (titles.contains("datetime")) {
                 try {
-                    adsetEntity.setDate(simpleDateFormat
-                            .parse(arrayElement.get(titles.indexOf("datetime")).getAsString()));
+                    adsetEntity.setDate(new Date(simpleDateFormat
+                            .parse(arrayElement.get(titles.indexOf("datetime")).getAsString()).getTime()));
                 } catch (ParseException e) {
                     e.printStackTrace();
                 }
@@ -99,7 +101,13 @@ public class JsonAdsetListDeserializer implements JsonDeserializer<List<Abstract
                 Adset adset = gson.fromJson(answer, Adset.class);
                 Map<String, String> parameters = Utils.getUrlParameters(adset.getClickUrl());
                 if (parameters.containsKey("cab")) {
-                    adsetEntity.setAfid(Integer.parseInt(parameters.get("cab")));
+                    if (parameters.get("cab").matches("\\d+")
+                            && MySQLAdsetDaoImpl.getInstance().getAffiliateByAfid(Integer.parseInt(parameters.get("cab"))) != null) {
+                        adsetEntity.setAfid(Integer.parseInt(parameters.get("cab")));
+                    }
+                    else {
+                        adsetEntity.setAfid(0);
+                    }
                 }
                 else adsetEntity.setAfid(2);
                 adsetEntity.setAdsetName(adset.getAdsetName());

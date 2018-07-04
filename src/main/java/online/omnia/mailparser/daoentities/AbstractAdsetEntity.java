@@ -1,7 +1,7 @@
 package online.omnia.mailparser.daoentities;
 
 import javax.persistence.*;
-import java.util.Date;
+import java.sql.Date;
 
 /**
  * Created by lollipop on 04.08.2017.

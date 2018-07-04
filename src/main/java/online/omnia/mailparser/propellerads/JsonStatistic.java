@@ -11,6 +11,7 @@ public class JsonStatistic {
     private String cpm;
     private String ctr;
     private String profit;
+    private String clickUrl;
 
     public String getShow() {
         return show;
@@ -66,5 +67,13 @@ public class JsonStatistic {
 
     public void setProfit(String profit) {
         this.profit = profit;
+    }
+
+    public String getClickUrl() {
+        return clickUrl;
+    }
+
+    public void setClickUrl(String clickUrl) {
+        this.clickUrl = clickUrl;
     }
 }

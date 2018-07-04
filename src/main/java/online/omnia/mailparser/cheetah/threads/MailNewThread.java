@@ -14,9 +14,11 @@ import sun.misc.BASE64Decoder;
 
 import javax.mail.*;
 import java.io.*;
+import java.sql.*;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.Date;
 import java.util.concurrent.CountDownLatch;
 
 /**
@@ -284,7 +286,7 @@ public class MailNewThread implements Runnable {
             }
             if (headersList.contains("Date")) {
                 try {
-                    adEntity.setDate(simpleDateFormat.parse(trElements.get(headersList.indexOf("Date")).text()));
+                    adEntity.setDate(new java.sql.Date(simpleDateFormat.parse(trElements.get(headersList.indexOf("Date")).text()).getTime()));
                     //adEntity.setTime(new Time(adEntity.getDate().getTime()));
 
                 } catch (ParseException e) {

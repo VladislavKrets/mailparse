@@ -21,14 +21,13 @@ import java.util.concurrent.Executors;
 public class Controller {
     public void zeroparkApiNew() {
         List<AccountEntity> accountEntities = MySQLAdsetDaoImpl.getInstance().getAccounts("Zeropark");
-        accountEntities.removeIf(accountEntity -> !accountEntity.getStatisticsType().equals("API"));
+        accountEntities.removeIf(accountEntity -> !accountEntity.getStatisticsType().equals("API") && accountEntity.getActual() != 1);
         CountDownLatch countDownLatch = new CountDownLatch(accountEntities.size());
 
         ExecutorService service = Executors.newFixedThreadPool(10);
         for (AccountEntity accountEntity : accountEntities) {
-            if (accountEntity.getStatisticsType().equals("API") && accountEntity.getActual() == 1) {
-                service.submit(new ApiYesterdayZeropark(accountEntity, countDownLatch));
-            }
+            service.submit(new ApiYesterdayZeropark(accountEntity, countDownLatch));
+
         }
         try {
             countDownLatch.await();
@@ -37,16 +36,14 @@ public class Controller {
             e.printStackTrace();
         }
     }
+
     public void propelleradsApiNew() {
         List<AccountEntity> accountEntities = MySQLAdsetDaoImpl.getInstance().getAccounts("PropellerAds");
-        accountEntities.removeIf(accountEntity -> !accountEntity.getStatisticsType().equals("API"));
+        accountEntities.removeIf(accountEntity -> !accountEntity.getStatisticsType().equals("API") || accountEntity.getActual() != 1);
         CountDownLatch countDownLatch = new CountDownLatch(accountEntities.size());
-
         ExecutorService service = Executors.newFixedThreadPool(10);
         for (AccountEntity accountEntity : accountEntities) {
-            if (accountEntity.getStatisticsType().equals("API") && accountEntity.getActual() == 1) {
-                service.submit(new ApiYesterdayPropellerAds(accountEntity, countDownLatch));
-            }
+            service.submit(new ApiYesterdayPropellerAds(accountEntity, countDownLatch));
         }
         try {
             countDownLatch.await();
@@ -76,6 +73,7 @@ public class Controller {
             e.printStackTrace();
         }
     }
+
     public void allApiNew() {
         List<AccountEntity> accountEntities = MySQLAdsetDaoImpl.getInstance().getAccounts("cheetah");
         accountEntities.removeIf(accountEntity -> !accountEntity.getStatisticsType().equals("API"));
@@ -94,6 +92,7 @@ public class Controller {
             e.printStackTrace();
         }
     }
+
     public void cheetahNew() {
         System.out.println("Getting accounts for working with api cheetah");
         apiCheetahNew();
@@ -104,19 +103,18 @@ public class Controller {
         System.out.println("Getting accounts for working with e-mail");
         emailCheetahNew();
     }
+
     public void apiCheetahNew() {
         List<AccountEntity> accountEntities = MySQLAdsetDaoImpl.getInstance().getAccounts("cheetah");
-        accountEntities.removeIf(accountEntity -> !accountEntity.getStatisticsType().equals("API"));
+        System.out.println(accountEntities);
+        accountEntities.removeIf(accountEntity -> accountEntity.getStatisticsType() == null || !accountEntity.getStatisticsType().equals("API") || accountEntity.getActual() != 1);
 
         CountDownLatch countDownLatch = new CountDownLatch(accountEntities.size());
 
         ExecutorService service = Executors.newFixedThreadPool(10);
         for (AccountEntity accountEntity : accountEntities) {
-            if (accountEntity.getStatisticsType().equals("API")) {
-                if (accountEntity.getActual() == 1) {
-                    service.submit(new ApiNewYesterdayThread(accountEntity, countDownLatch));
-                }
-            }
+            service.submit(new ApiNewYesterdayThread(accountEntity, countDownLatch));
+
         }
         try {
             countDownLatch.await();
@@ -125,6 +123,7 @@ public class Controller {
             e.printStackTrace();
         }
     }
+
     public void emailCheetahNew() {
         List<EmailAccessEntity> accessEntities = MySQLAdsetDaoImpl.getInstance().getMailsByCheck(1, "E-MAIL");
         CountDownLatch countDownLatch = new CountDownLatch(accessEntities.size());
@@ -141,8 +140,9 @@ public class Controller {
             e.printStackTrace();
         }
     }
+
     public void emailCheetahCheck() {
-        List<EmailSuccessEntity> emailSuccessEntities =  MySQLAdsetDaoImpl
+        List<EmailSuccessEntity> emailSuccessEntities = MySQLAdsetDaoImpl
                 .getInstance().getEmailSuccess(0, 5);
         CountDownLatch countDownLatch = new CountDownLatch(emailSuccessEntities.size());
         ExecutorService service = Executors.newFixedThreadPool(10);

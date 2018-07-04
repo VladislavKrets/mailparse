@@ -20,7 +20,6 @@ public class StatisticsJsonListDeserializer implements JsonDeserializer<List<Jso
             JsonArray jsonArray = element.getAsJsonArray();
             JsonStatistic jsonStatistic;
             for (JsonElement arrayElement : jsonArray) {
-
                 jsonStatistic  = new JsonStatistic();
                 jsonStatistic.setClick(arrayElement.getAsJsonObject().get("click").getAsString());
                 jsonStatistic.setConvers(arrayElement.getAsJsonObject().get("convers").getAsString());

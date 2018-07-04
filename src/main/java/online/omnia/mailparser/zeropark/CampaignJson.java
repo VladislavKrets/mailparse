@@ -8,6 +8,7 @@ public class CampaignJson {
     private String name;
     private double spent;
     private int conversions;
+    private String clickUrl;
 
     public String getCampaignId() {
         return campaignId;
@@ -49,5 +50,13 @@ public class CampaignJson {
                 ", spent=" + spent +
                 ", conversions=" + conversions +
                 '}';
+    }
+
+    public String getClickUrl() {
+        return clickUrl;
+    }
+
+    public void setClickUrl(String clickUrl) {
+        this.clickUrl = clickUrl;
     }
 }

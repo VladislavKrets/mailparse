@@ -1,10 +1,13 @@
 package online.omnia.mailparser.utils;
 
+import online.omnia.mailparser.daoentities.AbstractAdsetEntity;
+import online.omnia.mailparser.daoentities.AdsetEntity;
 import online.omnia.mailparser.daoentities.EmailAccessEntity;
 
 import java.io.*;
 import java.sql.Date;
 import java.sql.Time;
+import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -47,7 +50,17 @@ public class Utils {
         //props.put("mail.debug", "true");
         return props;
     }
+    private static FileWriter writer;
+    private static SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-dd-MM hh:mm:ss");
 
+    public static void writeLog(String text) {
+        try { if (writer == null) writer = new FileWriter("ZeroparkLog.log", true);
+            writer.write(dateFormat.format(new java.util.Date()) + "\n" + text);
+            writer.flush();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
     public static void setLogPath(String path) {
         Utils.path = path;
     }
@@ -129,5 +142,26 @@ public class Utils {
         }
         System.out.println("Parameters have been got");
         return parametersMap;
+    }
+    public static AdsetEntity getAdset(AbstractAdsetEntity abstractAdsetEntity) {
+        AdsetEntity adsetEntity = new AdsetEntity();
+        adsetEntity.setDate(abstractAdsetEntity.getDate());
+        adsetEntity.setCampaignName(abstractAdsetEntity.getCampaignName());
+        adsetEntity.setCampaignId(abstractAdsetEntity.getCampaignId());
+        adsetEntity.setAdsetName(abstractAdsetEntity.getAdsetName());
+        adsetEntity.setSpent(abstractAdsetEntity.getSpent());
+        adsetEntity.setClicks(abstractAdsetEntity.getClicks());
+        adsetEntity.setConversions(abstractAdsetEntity.getConversions());
+        adsetEntity.setReceiver(abstractAdsetEntity.getReceiver());
+        adsetEntity.setAccountId(abstractAdsetEntity.getAccountId());
+        adsetEntity.setCpc(abstractAdsetEntity.getCpc());
+        adsetEntity.setAdsetId(abstractAdsetEntity.getAdsetId());
+        adsetEntity.setCpi(abstractAdsetEntity.getCpi());
+        adsetEntity.setCpm(abstractAdsetEntity.getCpm());
+        adsetEntity.setCtr(abstractAdsetEntity.getCtr());
+        adsetEntity.setImpressions(abstractAdsetEntity.getImpressions());
+        adsetEntity.setAfid(abstractAdsetEntity.getAfid());
+        adsetEntity.setBuyerId(abstractAdsetEntity.getBuyerId());
+        return adsetEntity;
     }
 }

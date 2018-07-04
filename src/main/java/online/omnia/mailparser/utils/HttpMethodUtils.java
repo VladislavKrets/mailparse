@@ -32,6 +32,7 @@ public class HttpMethodUtils {
     }
 
     public static String getMethod(String urlPath, String token){
+        System.out.println(urlPath);
         try {
             if (urlPath == null) return null;
             HttpGet httpGet = new HttpGet(urlPath);
